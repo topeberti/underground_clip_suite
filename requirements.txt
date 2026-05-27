@@ -1,0 +1,26 @@
+# Core
+librosa>=0.10.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# CLIP semantic tagging
+open-clip-torch>=2.20.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# SRT parsing
+pysrt>=1.1.2
+
+# CLI
+typer>=0.9.0
+rich>=13.0.0
+
+# Upload
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# NOTE: For NVIDIA GPU acceleration (much faster CLIP tagging), replace the
+# torch/torchvision lines above and instead run:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# Check your CUDA version first: nvidia-smi

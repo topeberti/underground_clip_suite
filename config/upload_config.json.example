@@ -1,0 +1,17 @@
+{
+  "tiktok": {
+    "client_key": "YOUR_TIKTOK_CLIENT_KEY",
+    "client_secret": "YOUR_TIKTOK_CLIENT_SECRET",
+    "access_token": "",
+    "refresh_token": "",
+    "expires_at": "",
+    "open_id": ""
+  },
+  "instagram": {
+    "app_id": "YOUR_META_APP_ID",
+    "app_secret": "YOUR_META_APP_SECRET",
+    "access_token": "",
+    "expires_at": "",
+    "ig_user_id": ""
+  }
+}
