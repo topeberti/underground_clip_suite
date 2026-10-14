@@ -45,6 +45,7 @@ def build_project(
     fps: float,
     song_duration_sec: float,
 ) -> None:
+    fps = int(fps)  # timeline is set to an integer rate; compute frames at that same rate
     console.print("  [dim]→ Connecting to Resolve…[/dim]")
     resolve = _connect_resolve()
     console.print("  [dim]→ Connected.[/dim]")
@@ -100,9 +101,11 @@ def build_project(
         if item is None:
             console.print(f"  [yellow]warning[/yellow] media item missing for {clip['path']}, skipping.")
             continue
-        start_frame = _sec_to_frames(clip["clip_start_sec"], fps)
-        end_frame = start_frame + _sec_to_frames(clip["duration_sec"], fps)
-        record_frame = _sec_to_frames(clip["timeline_start_sec"], fps)
+        # Derive length from rounded boundaries so adjacent clips never leave a gap.
+        record_frame = round(clip["timeline_start_sec"] * fps)
+        end_record = round((clip["timeline_start_sec"] + clip["duration_sec"]) * fps)
+        start_frame = round(clip["clip_start_sec"] * fps)
+        end_frame = start_frame + max(1, end_record - record_frame)
         try:
             mp.AppendClipToTimeline({
                 "mediaPoolItem": item,

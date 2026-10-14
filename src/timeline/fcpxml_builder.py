@@ -55,9 +55,11 @@ def build_fcpxml(
     spine = SubElement(sequence, "spine")
 
     for clip in clips_sequence:
-        offset_f = int(clip["timeline_start_sec"] * fps_int)
-        dur_f = max(1, int(clip["duration_sec"] * fps_int))
-        start_f = int(clip["clip_start_sec"] * fps_int)
+        # Derive length from rounded boundaries so adjacent clips never leave a gap.
+        offset_f = round(clip["timeline_start_sec"] * fps_int)
+        end_f = round((clip["timeline_start_sec"] + clip["duration_sec"]) * fps_int)
+        dur_f = max(1, end_f - offset_f)
+        start_f = round(clip["clip_start_sec"] * fps_int)
         speed = clip.get("speed", 1.0)
 
         clip_el = SubElement(spine, "asset-clip",
