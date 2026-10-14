@@ -167,7 +167,7 @@ def _wait_for_oauth_code(timeout: int = 120) -> str:
 # TikTok OAuth flow
 # ---------------------------------------------------------------------------
 
-def run_tiktok_oauth(config_path: Path) -> None:
+def run_tiktok_oauth(config_path: Path, log=print) -> None:
     config = load_config(config_path)
     tk = config.get("tiktok", {})
     client_key = tk.get("client_key", "")
@@ -190,7 +190,7 @@ def run_tiktok_oauth(config_path: Path) -> None:
             "state": state,
         })
     )
-    print(f"\nOpening browser for TikTok authentication...\n{auth_url}\n")
+    log(f"\nOpening browser for TikTok authentication...\n{auth_url}\n")
     webbrowser.open(auth_url)
 
     code = _wait_for_oauth_code()
@@ -217,14 +217,14 @@ def run_tiktok_oauth(config_path: Path) -> None:
     ).isoformat()
     config["tiktok"]["open_id"] = data.get("open_id", "")
     save_config(config_path, config)
-    print("TikTok authentication saved.")
+    log("TikTok authentication saved.")
 
 
 # ---------------------------------------------------------------------------
 # Instagram OAuth flow
 # ---------------------------------------------------------------------------
 
-def run_instagram_oauth(config_path: Path) -> None:
+def run_instagram_oauth(config_path: Path, log=print) -> None:
     config = load_config(config_path)
     ig = config.get("instagram", {})
     app_id = ig.get("app_id", "")
@@ -244,7 +244,7 @@ def run_instagram_oauth(config_path: Path) -> None:
             "response_type": "code",
         })
     )
-    print(f"\nOpening browser for Instagram/Meta authentication...\n{auth_url}\n")
+    log(f"\nOpening browser for Instagram/Meta authentication...\n{auth_url}\n")
     webbrowser.open(auth_url)
 
     code = _wait_for_oauth_code()
@@ -293,7 +293,7 @@ def run_instagram_oauth(config_path: Path) -> None:
             ig_user_id = acc["instagram_business_account"]["id"]
             break
     if not ig_user_id:
-        print(
+        log(
             "Warning: could not automatically detect Instagram Business Account ID.\n"
             "Make sure your Instagram account is a Business or Creator account linked to a Facebook Page.\n"
             "You can set ig_user_id manually in the config file."
@@ -305,4 +305,4 @@ def run_instagram_oauth(config_path: Path) -> None:
     ).isoformat()
     config["instagram"]["ig_user_id"] = ig_user_id
     save_config(config_path, config)
-    print(f"Instagram authentication saved. ig_user_id: {ig_user_id or '(not detected — set manually)'}")
+    log(f"Instagram authentication saved. ig_user_id: {ig_user_id or '(not detected — set manually)'}")

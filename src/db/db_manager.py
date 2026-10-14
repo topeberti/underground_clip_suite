@@ -35,23 +35,34 @@ def insert_clip(
 
 def query_clips(
     db_path: Path,
-    vibe_label: str,
+    vibe_label: str | None,
     min_energy: float = 0.0,
     max_energy: float = 1.0,
     min_duration: float = 0.0,
 ) -> list[dict]:
     with sqlite3.connect(str(db_path)) as conn:
         conn.row_factory = sqlite3.Row
-        cursor = conn.execute(
-            """
-            SELECT * FROM clips
-            WHERE vibe_label = ?
-              AND energy_score >= ?
-              AND energy_score <= ?
-              AND duration_sec >= ?
-            """,
-            (vibe_label, min_energy, max_energy, min_duration),
-        )
+        if vibe_label is None:
+            cursor = conn.execute(
+                """
+                SELECT * FROM clips
+                WHERE energy_score >= ?
+                  AND energy_score <= ?
+                  AND duration_sec >= ?
+                """,
+                (min_energy, max_energy, min_duration),
+            )
+        else:
+            cursor = conn.execute(
+                """
+                SELECT * FROM clips
+                WHERE vibe_label = ?
+                  AND energy_score >= ?
+                  AND energy_score <= ?
+                  AND duration_sec >= ?
+                """,
+                (vibe_label, min_energy, max_energy, min_duration),
+            )
         rows = cursor.fetchall()
     return [{**dict(row), "tags": json.loads(row["tags"])} for row in rows]
 
@@ -73,6 +84,39 @@ def delete_clips_by_anime(db_path: Path, anime_name: str) -> int:
     with sqlite3.connect(str(db_path)) as conn:
         cursor = conn.execute("DELETE FROM clips WHERE path LIKE ?", (pattern,))
         return cursor.rowcount
+
+
+def find_clips_by_anime(db_path: Path, anime_name: str) -> list[str]:
+    pattern = f"%{anime_name}%"
+    with sqlite3.connect(str(db_path)) as conn:
+        rows = conn.execute("SELECT path FROM clips WHERE path LIKE ?", (pattern,)).fetchall()
+    return [r[0] for r in rows]
+
+
+def list_clips(
+    db_path: Path,
+    search: str = "",
+    vibe: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[dict], int]:
+    """Return (page of clips, total matching count)."""
+    where, params = [], []
+    if search:
+        where.append("path LIKE ?")
+        params.append(f"%{search}%")
+    if vibe:
+        where.append("vibe_label = ?")
+        params.append(vibe)
+    clause = f"WHERE {' AND '.join(where)}" if where else ""
+    with sqlite3.connect(str(db_path)) as conn:
+        conn.row_factory = sqlite3.Row
+        total = conn.execute(f"SELECT COUNT(*) FROM clips {clause}", params).fetchone()[0]
+        rows = conn.execute(
+            f"SELECT * FROM clips {clause} ORDER BY id DESC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        ).fetchall()
+    return [{**dict(r), "tags": json.loads(r["tags"])} for r in rows], total
 
 
 def get_stats(db_path: Path) -> dict:

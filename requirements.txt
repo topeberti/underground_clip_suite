@@ -1,5 +1,6 @@
 # Core
 librosa>=0.10.0
+sounddevice>=0.4.6
 opencv-python>=4.8.0
 numpy>=1.24.0
 Pillow>=10.0.0
@@ -15,6 +16,10 @@ pysrt>=1.1.2
 # CLI
 typer>=0.9.0
 rich>=13.0.0
+
+# Web UI
+fastapi>=0.109.0
+uvicorn>=0.27.0
 
 # Upload
 requests>=2.31.0

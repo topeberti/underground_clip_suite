@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Video Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Video Generator</h1>
+  <nav id="tabs">
+    <button data-tab="dashboard" class="active">Dashboard</button>
+    <button data-tab="library">Library</button>
+    <button data-tab="lyrics">Lyric Sync</button>
+    <button data-tab="build">Build</button>
+    <button data-tab="upload">Upload</button>
+  </nav>
+</header>
+
+<div id="toast" hidden></div>
+
+<main>
+  <!-- DASHBOARD -->
+  <section id="tab-dashboard" class="tab active">
+    <div class="row">
+      <h2>Clip database</h2>
+      <button id="btn-init-db">Initialize DB</button>
+      <button id="btn-refresh-stats" class="secondary">Refresh</button>
+    </div>
+    <p id="stats-empty" class="muted" hidden>Database not initialized yet.</p>
+    <div id="stats" class="cards"></div>
+  </section>
+
+  <!-- LIBRARY -->
+  <section id="tab-library" class="tab">
+    <h2>Tag a folder</h2>
+    <div class="card">
+      <label>Folder of video clips
+        <span class="pathfield"><input id="tag-folder" placeholder="D:\VideoPacks\Pack01"><button class="secondary" data-pick="dir" data-target="tag-folder">Browse</button></span>
+      </label>
+      <label class="check"><input type="checkbox" id="tag-force"> Re-tag clips already in the database</label>
+      <button id="btn-tag">Start tagging</button>
+      <div id="tag-job" class="job" hidden><progress value="0" max="1"></progress><pre class="log"></pre></div>
+    </div>
+
+    <h2>Clips</h2>
+    <div class="row">
+      <input id="clip-search" placeholder="Search path…">
+      <select id="clip-vibe"><option value="">All vibes</option><option>energic</option><option>sad</option><option>neutral</option></select>
+      <span id="clip-count" class="muted"></span>
+    </div>
+    <table id="clip-table">
+      <thead><tr><th>Path</th><th>Vibe</th><th>Energy</th><th>Dur</th><th>Tags</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="row">
+      <button id="clip-prev" class="secondary">← Prev</button>
+      <button id="clip-next" class="secondary">Next →</button>
+    </div>
+
+    <h2>Remove an anime</h2>
+    <div class="card">
+      <p class="muted">Matches every clip whose path contains the name.</p>
+      <div class="row">
+        <input id="anime-name" placeholder="Naruto">
+        <button id="btn-anime-preview" class="secondary">Preview</button>
+      </div>
+      <div id="anime-preview" hidden>
+        <p id="anime-summary"></p>
+        <pre id="anime-paths" class="log"></pre>
+        <label class="check danger"><input type="checkbox" id="anime-delete-files"> Also delete the video files from disk (irreversible)</label>
+        <button id="btn-anime-remove" class="danger">Remove</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LYRIC SYNC -->
+  <section id="tab-lyrics" class="tab">
+    <h2>Lyric sync</h2>
+    <div class="card">
+      <label>Audio file
+        <span class="pathfield"><input id="ly-audio" placeholder="D:\track.mp3"><button class="secondary" data-pick="file" data-ext=".mp3,.wav,.flac,.m4a,.ogg,.aac" data-target="ly-audio">Browse</button></span>
+      </label>
+      <button id="ly-load">Load</button>
+      <audio id="ly-player" controls hidden></audio>
+    </div>
+
+    <div id="ly-tap" class="card" hidden>
+      <h3>1 · Tap phase</h3>
+      <p class="muted">Press <kbd>Start</kbd>, then hit <kbd>Space</kbd> at the start of each lyric line.
+        <kbd>Backspace</kbd> undo · <kbd>R</kbd> restart · <kbd>Q</kbd> stop.</p>
+      <div class="row">
+        <label class="inline">Countdown <input id="ly-countdown" type="number" min="0" max="10" value="3" style="width:4rem"></label>
+        <button id="ly-start">Start</button>
+        <button id="ly-stop" class="secondary" hidden>Stop</button>
+      </div>
+      <div id="ly-big" class="big">—</div>
+      <ol id="ly-taps" class="taps"></ol>
+    </div>
+
+    <div id="ly-assign" class="card" hidden>
+      <h3>2 · Assign lyrics</h3>
+      <p class="muted">Play each segment and type its lyric. Leave a line empty to skip it. <kbd>Enter</kbd> jumps to the next segment.</p>
+      <div id="ly-rows"></div>
+      <label>Save as
+        <span class="pathfield"><input id="ly-out" placeholder="D:\track.srt"></span>
+      </label>
+      <div class="row">
+        <button id="ly-save">Save .srt</button>
+        <button id="ly-use-build" class="secondary" hidden>Use in Build →</button>
+        <button id="ly-redo" class="secondary">Redo taps</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUILD -->
+  <section id="tab-build" class="tab">
+    <h2>Build DaVinci Resolve timelines</h2>
+    <div class="card">
+      <label>Song
+        <span class="pathfield"><input id="b-song"><button class="secondary" data-pick="file" data-ext=".mp3,.wav,.flac,.m4a,.ogg,.aac" data-target="b-song">Browse</button></span>
+      </label>
+      <label>Lyrics (.srt)
+        <span class="pathfield"><input id="b-lyrics"><button class="secondary" data-pick="file" data-ext=".srt" data-target="b-lyrics">Browse</button></span>
+      </label>
+      <div class="grid">
+        <label>Vibe <select id="b-vibe"><option value="">Any</option><option>energic</option><option>sad</option></select></label>
+        <label>FPS <input id="b-fps" type="number" value="30" min="1" step="any"></label>
+        <label>Project name <input id="b-name" value="video_project"></label>
+        <label>Timelines <input id="b-count" type="number" value="1" min="1"></label>
+      </div>
+      <label>Output folder (default: a <code>timelines</code> folder next to the song)
+        <span class="pathfield"><input id="b-out"><button class="secondary" data-pick="dir" data-target="b-out">Browse</button></span>
+      </label>
+      <label class="check"><input type="checkbox" id="b-same"> Restrict each edit to a single anime</label>
+      <button id="btn-build">Build</button>
+      <div id="build-job" class="job" hidden><pre class="log"></pre></div>
+      <div id="build-result" hidden>
+        <h3>Done</h3>
+        <ul id="build-files"></ul>
+        <ol class="muted">
+          <li>In Resolve: File → Import Timeline → Import AAF, EDL, XML… → select the .fcpxml file(s)</li>
+          <li>Drag <b id="build-song"></b> onto the audio track</li>
+          <li>File → Import → Subtitles → select <b id="build-srt"></b></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- UPLOAD -->
+  <section id="tab-upload" class="tab">
+    <h2>Upload</h2>
+    <div class="card">
+      <h3>Accounts</h3>
+      <div id="auth-status" class="row"></div>
+      <div class="row">
+        <button class="secondary" data-auth="tiktok">Authenticate TikTok</button>
+        <button class="secondary" data-auth="instagram">Authenticate Instagram</button>
+      </div>
+      <div id="auth-job" class="job" hidden><pre class="log"></pre></div>
+    </div>
+
+    <div class="card">
+      <h3>Batch upload</h3>
+      <label>Folder with exported .mp4 files
+        <span class="pathfield"><input id="u-folder"><button class="secondary" data-pick="dir" data-target="u-folder">Browse</button></span>
+      </label>
+      <label>Caption (with hashtags) <textarea id="u-caption" rows="3"></textarea></label>
+      <div class="grid">
+        <label class="check"><input type="checkbox" id="u-tiktok" checked> TikTok</label>
+        <label class="check"><input type="checkbox" id="u-instagram" checked> Instagram</label>
+        <label>Privacy <select id="u-privacy"><option>public</option><option>followers</option><option>private</option></select></label>
+        <label>Delay (s) <input id="u-delay" type="number" value="10" min="0"></label>
+      </div>
+      <label class="check"><input type="checkbox" id="u-skipnorm"> Skip ffmpeg audio normalization</label>
+      <label class="check"><input type="checkbox" id="u-dry" checked> Dry run (no uploads)</label>
+      <button id="btn-upload">Start</button>
+      <div id="upload-job" class="job" hidden><progress value="0" max="1"></progress><pre class="log"></pre></div>
+    </div>
+
+    <h3>Recent uploads</h3>
+    <table id="upload-log"><thead><tr><th>Time</th><th>File</th><th>Platform</th><th>Status</th><th>Details</th></tr></thead><tbody></tbody></table>
+  </section>
+</main>
+
+<!-- File picker -->
+<dialog id="picker">
+  <div class="row"><button id="pk-up" class="secondary">↑ Up</button><input id="pk-path"><button id="pk-go" class="secondary">Go</button></div>
+  <ul id="pk-list"></ul>
+  <div class="row"><button id="pk-choose">Select this folder</button><button id="pk-cancel" class="secondary">Cancel</button></div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

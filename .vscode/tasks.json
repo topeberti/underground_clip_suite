@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Video Generator UI",
+      "type": "shell",
+      "command": "C:\\Users\\berti\\anaconda3\\envs\\videogen\\python.exe",
+      "args": ["src/main.py", "serve"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}

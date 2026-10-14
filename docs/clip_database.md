@@ -26,12 +26,17 @@ CREATE INDEX IF NOT EXISTS idx_energy ON clips(energy_score);
 
 ## Semantic Tagging with CLIP
 
-CLIP (Contrastive Language-Image Pretraining) scores a set of candidate text labels
-against sampled frames from the video. The top-scoring labels become the clip's tags.
+OpenCLIP (ViT-B-32, OpenAI weights) scores every candidate tag against frames sampled
+from the clip. Tags whose cosine similarity to the averaged frame embedding is ≥ 0.20
+are kept; up to the top 10 are stored.
 
-### Candidate Tag List
+### Sampling Strategy
 
-The agent should define a master list of candidate tags. Suggested starting set:
+`n = max(4, int(duration_sec / 5))` — one frame per 5 seconds, minimum 4.
+
+Frames are sampled at evenly-spaced indices across the clip's total frame count.
+
+### Candidate Tag List (`src/tagger/constants.py`)
 
 ```python
 CANDIDATE_TAGS = [
@@ -41,107 +46,90 @@ CANDIDATE_TAGS = [
     "sports", "running", "jumping", "skateboarding", "waves crashing",
 
     # Sad / calm / melancholic
-    "rain", "empty street", "alone", "sunset", "fog", "dark room",
-    "slow motion", "candle", "window", "ocean horizon", "abandoned",
-    "autumn leaves", "silhouette", "crying", "hands", "close up face",
+    "rain", "empty street", "alone person", "sunset", "fog", "dark room",
+    "slow motion", "candle", "window", "ocean horizon", "abandoned building",
+    "autumn leaves", "silhouette", "hands", "close up face",
 
     # Neutral / versatile
-    "nature", "forest", "mountains", "sky", "clouds", "water",
-    "urban", "building", "road", "texture", "abstract", "smoke",
-    "light leak", "bokeh", "aerial", "people walking",
+    "nature", "forest", "mountains", "sky", "clouds", "water reflection",
+    "urban street", "building", "road", "smoke", "dust",
+    "light leak", "bokeh background", "aerial view", "people walking",
+
+    # Extra
+    "fireworks", "night club", "graffiti", "skyscraper",
 ]
 ```
 
-### Sampling Strategy
-
-Sample N frames evenly distributed across the clip duration.
-Recommended N: `max(4, int(duration_sec / 5))` — one frame per 5 seconds, minimum 4.
-
-```python
-import cv2
-
-def sample_frames(video_path: str, n: int) -> list:
-    cap = cv2.VideoCapture(video_path)
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    indices = [int(i * total / n) for i in range(n)]
-    frames = []
-    for idx in indices:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-        ret, frame = cap.read()
-        if ret:
-            frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    cap.release()
-    return frames
-```
+To add new tags: edit `CANDIDATE_TAGS` in `src/tagger/constants.py` and re-tag
+the library with `python src/main.py tag --folder <path> --force`.
 
 ---
 
 ## Energy Scoring
 
-Energy score combines two signals:
+Energy score combines two signals (see `src/tagger/energy_scorer.py`):
 
 ### 1. Motion Score (optical flow magnitude)
-```python
-def motion_score(video_path: str, sample_pairs: int = 10) -> float:
-    cap = cv2.VideoCapture(video_path)
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    scores = []
-    step = max(1, total // sample_pairs)
-    prev = None
-    for i in range(0, total, step):
-        cap.set(cv2.CAP_PROP_POS_FRAMES, i)
-        ret, frame = cap.read()
-        if not ret:
-            continue
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        if prev is not None:
-            flow = cv2.calcOpticalFlowFarneback(prev, gray, None,
-                                                0.5, 3, 15, 3, 5, 1.2, 0)
-            magnitude = np.sqrt(flow[..., 0]**2 + flow[..., 1]**2).mean()
-            scores.append(magnitude)
-        prev = gray
-    cap.release()
-    # Normalize: typical range 0–30, clip and scale to 0–1
-    raw = np.mean(scores) if scores else 0.0
-    return float(min(raw / 25.0, 1.0))
-```
+
+Sample 10 pairs of frames spaced evenly across the clip.
+For each pair, compute Farneback optical flow and take the mean vector magnitude.
+Average over all pairs, then normalize: `min(mean / 25.0, 1.0)`.
 
 ### 2. Brightness Variance Score
-```python
-def brightness_variance_score(video_path: str, n_frames: int = 10) -> float:
-    frames = sample_frames(video_path, n_frames)
-    if not frames:
-        return 0.5
-    means = [np.mean(f) for f in frames]
-    variance = np.std(means)
-    # High variance = fast cuts / flashing = more energic
-    return float(min(variance / 60.0, 1.0))
-```
 
-### Combined Energy Score
-```python
-energy_score = 0.7 * motion_score + 0.3 * brightness_variance_score
+Sample 10 frames evenly. Compute per-frame mean pixel brightness.
+Standard deviation of those means, normalized: `min(std / 60.0, 1.0)`.
+High variance → fast cuts / flashing → more energic.
+
+### Combined
+
+```
+energy_score = min(0.7 × motion_score + 0.3 × brightness_variance_score, 1.0)
 ```
 
 ---
 
-## Vibe Label Assignment
+## Vibe Label Assignment (`src/tagger/tag_library.py`)
 
 ```python
 def assign_vibe(energy_score: float) -> str:
     if energy_score >= 0.6:
         return "energic"
-    elif energy_score <= 0.4:
+    if energy_score <= 0.4:
         return "sad"
-    else:
-        return "neutral"
+    return "neutral"
+```
+
+---
+
+## Supported Video Formats
+
+Defined in `src/tagger/constants.py`:
+
+```python
+VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 ```
 
 ---
 
 ## Re-tagging & Updates
 
-- Running `tag` on a folder that's already been tagged will **skip** existing clips (by path).
-- To **force re-tag** a clip: `python src/main.py retag --path "D:\clip.mp4"`
-- To **delete** a clip from DB (e.g. file moved): `python src/main.py remove-clip --path "D:\clip.mp4"`
-- To **inspect** the DB: `python src/main.py stats` — shows clip count, vibe distribution, energy histogram.
+| Task | Command |
+|------|---------|
+| Tag a new folder | `python src/main.py tag --folder "D:\Pack01"` |
+| Re-tag a single clip | `python src/main.py retag --path "D:\Pack01\clip.mp4"` |
+| Re-tag entire folder | `python src/main.py tag --folder "D:\Pack01" --force` |
+| Remove a clip from DB | `python src/main.py remove-clip --path "D:\Pack01\clip.mp4"` |
+| Remove an anime | `python src/main.py remove-anime --name "Naruto"` |
+| View statistics | `python src/main.py stats` |
+
+`tag` skips clips already present in the DB (matched by absolute path).
+`--force` overrides this and re-tags everything in the folder.
+
+---
+
+## Model Loading
+
+The CLIP model is loaded lazily on first call to `tag_clip()` and cached in memory
+for the rest of the process (`_MODEL_CACHE` dict in `clip_tagger.py`).
+GPU is used automatically when `torch.cuda.is_available()` is True.

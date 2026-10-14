@@ -90,6 +90,7 @@ def run_batch(
     dry_run: bool,
     config_path: Path,
     console: Console,
+    on_progress=None,
 ) -> list[UploadResult]:
 
     mp4_files = sorted(folder.glob("*.mp4"))
@@ -203,6 +204,8 @@ def run_batch(
                 _log_result(result, batch_id)
                 progress.advance(task)
                 op_num += 1
+                if on_progress:
+                    on_progress(op_num, total_ops)
 
                 # Delay between uploads (skip after last)
                 if op_num < total_ops:

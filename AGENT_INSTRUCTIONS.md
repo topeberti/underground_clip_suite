@@ -1,16 +1,21 @@
 # Video Generator — Agent Instructions
 
 ## What This Project Does
-Automates the creation of a DaVinci Resolve project scaffold for lyric/edit videos.
+
+Automates the creation of AMV / lyric-edit videos.
 
 Given:
 - A song file (.mp3 / .wav)
 - A lyrics file (.srt, timed manually in Subtitle Edit)
-- A vibe flag ("energic" or "sad")
+- An optional vibe flag ("energic" or "sad")
 
 It produces:
-- A DaVinci Resolve project with clips placed on the timeline, lyrics as Text+ nodes, and the song on the audio track.
-- The human then does final creative editing. The scaffold is a starting point, not the final product.
+- A `.fcpxml` file that is imported into DaVinci Resolve.
+- The human then adds the song on the audio track, imports the SRT as subtitles,
+  and does final creative editing. The scaffold is a starting point, not a finished product.
+
+The project is **fully implemented**. Agent tasks are typically bug fixes, new features,
+or extending the vibe/tagging system.
 
 ---
 
@@ -19,80 +24,90 @@ It produces:
 ```
 video_generator/
 ├── AGENT_INSTRUCTIONS.md        ← you are here
-├── ARCHITECTURE.md              ← full technical design
+├── ARCHITECTURE.md              ← full technical design (authoritative)
 ├── SETUP.md                     ← environment + dependency setup
 ├── docs/
-│   ├── resolve_api.md           ← DaVinci Resolve scripting notes
+│   ├── resolve_api.md           ← legacy Resolve scripting notes
 │   ├── clip_database.md         ← clip tagging + DB schema
 │   ├── srt_format.md            ← .srt parsing notes
 │   └── vibe_system.md           ← how vibe maps to clip selection
 ├── src/
-│   ├── main.py                  ← CLI entry point
+│   ├── main.py                  ← CLI entry point (typer)
 │   ├── tagger/
-│   │   ├── clip_tagger.py       ← CLIP-based semantic tagging
-│   │   └── energy_scorer.py     ← motion + brightness energy scoring
+│   │   ├── constants.py         ← CANDIDATE_TAGS list, VIDEO_EXTENSIONS set
+│   │   ├── clip_tagger.py       ← OpenCLIP semantic tagging
+│   │   ├── energy_scorer.py     ← optical-flow + brightness energy scoring
+│   │   └── tag_library.py       ← batch-tag a folder; single-clip re-tag
 │   ├── timeline/
-│   │   ├── beat_detector.py     ← librosa BPM + beat timestamps
-│   │   ├── clip_selector.py     ← vibe-based weighted random selection
-│   │   └── resolve_builder.py   ← DaVinci Resolve API timeline builder
+│   │   ├── beat_detector.py     ← librosa BPM + duration analysis
+│   │   ├── clip_selector.py     ← lyric-boundary cut points + weighted clip selection
+│   │   ├── fcpxml_builder.py    ← render clip list → .fcpxml file (primary output)
+│   │   └── resolve_builder.py   ← legacy: direct Resolve API (not used by CLI)
 │   ├── lyrics/
-│   │   └── srt_parser.py        ← .srt file parser
-│   └── db/
-│       ├── schema.sql            ← SQLite schema
-│       └── db_manager.py        ← DB read/write helpers
+│   │   └── srt_parser.py        ← .srt file parser (pysrt + regex fallback)
+│   ├── db/
+│   │   ├── schema.sql            ← SQLite schema
+│   │   └── db_manager.py        ← DB CRUD helpers
+│   └── uploader/
+│       ├── batch.py             ← bulk .mp4 upload to TikTok / Instagram
+│       ├── auth.py              ← OAuth flows (TikTok, Instagram)
+│       ├── tiktok.py            ← TikTok Video Upload API wrapper
+│       ├── instagram.py         ← Instagram Graph API Reels wrapper
+│       └── ngrok_server.py      ← local OAuth redirect server
 ├── clips_db/
 │   └── clips.db                 ← SQLite database (generated, not committed)
-└── output/                      ← generated Resolve projects land here
+└── output/                      ← .fcpxml files land here
 ```
 
 ---
 
-## Build Order for the Agent
+## Core Pipeline (already implemented)
 
-Implement in this exact order. Each step is independently testable.
-
-### Step 1 — SRT Parser (`src/lyrics/srt_parser.py`)
-Parse a `.srt` file into a list of dicts:
-```python
-[{"index": 1, "start_ms": 12500, "end_ms": 15800, "text": "First line"}, ...]
 ```
-Test: parse the sample `docs/srt_format.md` example and print results.
-
-### Step 2 — Database (`src/db/`)
-Create the SQLite DB from `schema.sql`. Implement `db_manager.py` with:
-- `insert_clip(path, duration, fps, tags, energy_score, vibe_label)`
-- `query_clips(vibe_label, min_energy, max_energy, min_duration)` → list of clip dicts
-
-### Step 3 — Clip Tagger (`src/tagger/`)
-- `clip_tagger.py`: sample frames from a video, run through CLIP, return top semantic tags
-- `energy_scorer.py`: compute motion variance (optical flow or frame diff) + brightness variance → return float 0.0–1.0
-- Wire both into a `tag_library.py` script that walks a folder, tags all clips, and inserts into DB
-
-### Step 4 — Beat Detector (`src/timeline/beat_detector.py`)
-Use librosa to return:
-```python
-{"bpm": 128.0, "beat_times": [0.47, 0.94, 1.41, ...], "duration": 213.5}
+srt_parser → beat_detector → clip_selector → fcpxml_builder → .fcpxml
 ```
 
-### Step 5 — Clip Selector (`src/timeline/clip_selector.py`)
-Given vibe, song duration, and beat_times:
-- Query DB for matching clips
-- Fill the song duration with randomly selected clips, preferring cuts on beats
-- Return an ordered list of `{"path": ..., "start_sec": ..., "duration_sec": ...}`
+See ARCHITECTURE.md for the full annotated data flow.
 
-### Step 6 — Resolve Builder (`src/timeline/resolve_builder.py`)
-Connect to a running DaVinci Resolve instance via its Python API.
-Place clips, lyrics (Text+ nodes), and song on the timeline.
-See `docs/resolve_api.md` for connection details and caveats.
+---
 
-### Step 7 — CLI Entry Point (`src/main.py`)
-Wire everything together. See ARCHITECTURE.md for the full flow.
+## CLI Commands
+
+```bash
+python src/main.py init-db
+python src/main.py tag --folder "D:\Clips\Pack01"
+python src/main.py tag --folder "D:\Clips\Pack01" --force   # re-tag existing
+python src/main.py retag --path "D:\Clips\clip.mp4"
+python src/main.py remove-clip --path "D:\Clips\clip.mp4"
+python src/main.py remove-anime --name "Naruto" [--dry-run] [--delete-files]
+python src/main.py stats
+python src/main.py build --song track.mp3 --lyrics track.srt --vibe energic --fps 30 --name edit_v1
+python src/main.py build ... --count 5 --same-anime
+python src/main.py setup-upload [--platform tiktok|instagram|all]
+python src/main.py upload-batch --folder exports/ --caption "caption #fyp"
+python src/main.py upload-status [--last N]
+```
+
+---
+
+## Key Design Decisions
+
+- **Cut points come from lyric boundaries**, not beat-snapping. One clip per lyric segment.
+  `beat_detector` is still called to obtain `duration_sec`; `beat_times` is not used downstream.
+- **FCPXML, not Resolve API**. The `resolve_builder.py` module exists but is not wired
+  into `main.py`. The FCPXML approach works without Resolve being open.
+- **MIN_SPEED = 0.5** — clips are never slowed below 50% to fill a long segment.
+- **MIN_CUT_GAP = 0.1 s** — cut points within 100 ms of the previous are discarded,
+  preventing a 1-frame first clip when an SRT starts at 1 ms instead of 0 ms.
+- **same_anime mode** uses a greedy feasibility check before committing to an anime;
+  raises `RuntimeError` rather than silently reusing footage.
 
 ---
 
 ## Key Constraints
-- DaVinci Resolve **must be open and running** before the script executes. The API connects to a live instance.
-- The clip library tagging (`Step 3`) is a **one-time setup** per video pack. Re-run only when adding new packs.
-- Python version: **3.10+**
+
+- Python **3.10+**
 - Platform: **Windows** (user runs DaVinci Resolve on Windows)
-- All paths should use `pathlib.Path` for cross-platform safety even on Windows.
+- All paths should use `pathlib.Path`
+- OpenCLIP model (`ViT-B-32`) is loaded lazily and cached in-process; GPU used when available
+- The database (`clips_db/clips.db`) and output folder are git-ignored

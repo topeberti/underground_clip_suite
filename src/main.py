@@ -8,11 +8,14 @@ Commands:
   remove-clip  Remove a clip from the DB by path
   remove-anime Remove all clips from a specific anime (DB only or DB + disk)
   stats        Show DB statistics
+  lyric-sync   Tap-along lyric syncer — creates a .srt file from an audio file
   build        Build a DaVinci Resolve project
+  serve        Start the local web UI
 
 Usage examples:
   python src/main.py init-db
   python src/main.py tag --folder "D:/VideoPacka/Pack01"
+  python src/main.py lyric-sync "D:/track.mp3"
   python src/main.py build --song "D:/track.mp3" --lyrics "D:/track.srt" --vibe energic --fps 30 --name "my_edit_v1"
   python src/main.py remove-anime --name "Naruto" --dry-run
   python src/main.py remove-anime --name "Naruto"
@@ -87,35 +90,30 @@ def remove_anime(
     delete_files: bool = typer.Option(False, help="Also delete the video files from disk (irreversible)"),
 ):
     """Remove all clips from a specific anime from the database (and optionally from disk)."""
-    import sqlite3 as _sqlite3
+    paths = db_manager.find_clips_by_anime(DB_PATH, name)
 
-    pattern = f"%{name}%"
-    with _sqlite3.connect(str(DB_PATH)) as conn:
-        conn.row_factory = _sqlite3.Row
-        rows = conn.execute("SELECT path FROM clips WHERE path LIKE ?", (pattern,)).fetchall()
-
-    if not rows:
+    if not paths:
         console.print(f"[yellow]No clips found matching '{name}'.[/yellow]")
         return
 
-    console.print(f"[bold]{len(rows)} clip(s) match '{name}':[/bold]")
-    for row in rows:
-        console.print(f"  [dim]{row['path']}[/dim]")
+    console.print(f"[bold]{len(paths)} clip(s) match '{name}':[/bold]")
+    for p in paths:
+        console.print(f"  [dim]{p}[/dim]")
 
     if dry_run:
         console.print("[yellow]Dry run — nothing deleted.[/yellow]")
         return
 
     action = "Delete from DB and disk" if delete_files else "Remove from DB"
-    typer.confirm(f"\n{action} for all {len(rows)} clip(s)?", abort=True)
+    typer.confirm(f"\n{action} for all {len(paths)} clip(s)?", abort=True)
 
     deleted = db_manager.delete_clips_by_anime(DB_PATH, name)
     console.print(f"[green]Removed {deleted} clip(s) from database.[/green]")
 
     if delete_files:
         removed, missing = 0, 0
-        for row in rows:
-            p = Path(row["path"])
+        for raw in paths:
+            p = Path(raw)
             if p.exists():
                 p.unlink()
                 removed += 1
@@ -150,10 +148,25 @@ def stats():
 
 
 @app.command()
+def lyric_sync(
+    audio: Path = typer.Argument(..., help="Audio file (mp3/wav/flac)"),
+    output: Path = typer.Option(None, "-o", "--output",
+        help="Output .srt path (default: <audio>.srt next to the audio file)"),
+    countdown: int = typer.Option(3, help="Seconds of countdown before playback starts"),
+):
+    """Tap-along lyric syncer — play audio, mark timestamps with SPACE, assign lyrics, write .srt."""
+    if not audio.exists():
+        console.print(f"[red]Audio file not found: {audio}[/red]")
+        raise typer.Exit(1)
+    from src.lyrics.lyric_syncer import run
+    run(audio, output, countdown)
+
+
+@app.command()
 def build(
     song: Path = typer.Option(..., help="Path to song file (.mp3/.wav)"),
     lyrics: Path = typer.Option(..., help="Path to .srt lyrics file"),
-    vibe: str = typer.Option(..., help="Vibe: 'energic' or 'sad'"),
+    vibe: str = typer.Option(None, help="Vibe filter: 'energic' or 'sad'. Omit to use all clips."),
     fps: float = typer.Option(30.0, help="Timeline FPS"),
     name: str = typer.Option("video_project", help="Project name in Resolve"),
     count: int = typer.Option(1, help="Number of timelines to generate"),
@@ -167,8 +180,8 @@ def build(
     if not lyrics.exists():
         console.print(f"[red]Lyrics file not found: {lyrics}[/red]")
         raise typer.Exit(1)
-    if vibe not in ("energic", "sad"):
-        console.print(f"[red]Invalid vibe '{vibe}'. Must be 'energic' or 'sad'.[/red]")
+    if vibe is not None and vibe not in ("energic", "sad"):
+        console.print(f"[red]Invalid vibe '{vibe}'. Must be 'energic' or 'sad' (or omit for all clips).[/red]")
         raise typer.Exit(1)
     if count < 1:
         console.print("[red]--count must be at least 1.[/red]")
@@ -176,49 +189,19 @@ def build(
 
     resolved_output_dir = output_dir if output_dir is not None else Path(__file__).parent.parent / "output"
 
-    console.print(f"[bold]Building {count} timeline(s):[/bold] {name}")
-    console.print(f"  Song:       {song}")
-    console.print(f"  Lyrics:     {lyrics}")
-    console.print(f"  Vibe:       {vibe}  |  FPS: {fps}  |  Same anime: {same_anime}")
-    console.print(f"  Output dir: {resolved_output_dir}")
-
-    console.print("[dim]Parsing lyrics…[/dim]")
-    srt_blocks = parse_srt(lyrics)
-    console.print(f"  {len(srt_blocks)} lyric blocks loaded.")
-
-    console.print("[dim]Analyzing song…[/dim]")
-    beat_data = beat_detector.analyze(song)
-    console.print(f"  BPM: {beat_data['bpm']:.1f}  |  Duration: {beat_data['duration_sec']:.1f}s  |  Beats: {len(beat_data['beat_times'])}")
-
-    saved_paths = []
-    for i in range(count):
-        label = f"[{i + 1}/{count}] " if count > 1 else ""
-        timeline_name = f"{name}_{i + 1}" if count > 1 else name
-
-        console.print(f"[dim]{label}Selecting clips…[/dim]")
-        try:
-            clips_sequence = clip_selector.select_clips(
-                DB_PATH, vibe, srt_blocks, beat_data["duration_sec"],
-                same_anime=same_anime,
-            )
-        except RuntimeError as exc:
-            console.print(f"[red]{exc}[/red]")
-            raise typer.Exit(1)
-        console.print(f"  {label}{len(clips_sequence)} clips selected.")
-
-        console.print(f"[dim]{label}Building FCPXML…[/dim]")
-        try:
-            fcpxml_path = fcpxml_builder.build_fcpxml(
-                timeline_name, clips_sequence, fps, beat_data["duration_sec"], resolved_output_dir
-            )
-        except Exception as exc:
-            console.print(f"[red]Error: {exc}[/red]")
-            import traceback
-            console.print(traceback.format_exc())
-            raise typer.Exit(1)
-
-        saved_paths.append(fcpxml_path)
-        console.print(f"  {label}Saved: [cyan]{fcpxml_path}[/cyan]")
+    from src.timeline.build_runner import run_build
+    try:
+        saved_paths = run_build(
+            song, lyrics, vibe, fps, name, count, resolved_output_dir, same_anime, DB_PATH, console
+        )
+    except RuntimeError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(1)
+    except Exception as exc:
+        console.print(f"[red]Error: {exc}[/red]")
+        import traceback
+        console.print(traceback.format_exc())
+        raise typer.Exit(1)
 
     console.print(f"\n[green bold]Done![/green bold] {len(saved_paths)} timeline(s) saved to [cyan]{resolved_output_dir}[/cyan]")
     console.print("\n[bold]Next steps in DaVinci Resolve:[/bold]")
@@ -353,6 +336,16 @@ def upload_status(
             detail,
         )
     console.print(table)
+
+
+@app.command()
+def serve(
+    port: int = typer.Option(8000, help="Port to listen on"),
+    no_browser: bool = typer.Option(False, help="Do not open the browser automatically"),
+):
+    """Start the local web UI."""
+    from src.web.app import run
+    run(port=port, open_browser=not no_browser)
 
 
 if __name__ == "__main__":
