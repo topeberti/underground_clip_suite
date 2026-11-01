@@ -1,5 +1,10 @@
 config/upload_config.json
-output/upload_log.jsonl
+output/
+timelines/
+clips_db/
+venv/
+.venv/
+.claude/
 __pycache__/
 *.pyc
 *.pyo
