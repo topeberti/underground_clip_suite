@@ -406,6 +406,15 @@ function syncBuildOut() {
 }
 $("b-song").addEventListener("change", syncBuildOut);
 
+function syncBuildType() {
+  const images = $("b-type").value === "pinterest";
+  $("b-pin-row").hidden = !images;
+  $("b-beats-row").hidden = !images;
+  document.querySelectorAll("#tab-build .anime-only").forEach((x) => { x.hidden = images; });
+}
+$("b-type").addEventListener("change", syncBuildType);
+syncBuildType();
+
 $("btn-build").onclick = (e) => guarded(e.target, async () => {
   $("build-result").hidden = true;
   const job = await runJob("/api/jobs/build", {
@@ -417,6 +426,9 @@ $("btn-build").onclick = (e) => guarded(e.target, async () => {
     count: parseInt($("b-count").value, 10) || 1,
     output_dir: $("b-out").value.trim() || null,
     same_anime: $("b-same").checked,
+    edit_type: $("b-type").value,
+    pinterest_dir: $("b-pin").value.trim() || null,
+    beats_per_image: parseFloat($("b-beats").value) || null,
   }, $("build-job"));
   if (job.status !== "done") return;
   $("build-files").replaceChildren(...job.result.files.map((f) => {

@@ -19,6 +19,7 @@ Tus clips + canción + letra  →  Video Generator  →  script de Resolve  → 
 1. **Etiqueta tus clips** con inteligencia artificial (modelo CLIP): detecta qué aparece en cada clip y cuánta energía tiene (*energic*, *sad* o *neutral*).
 2. **Sincroniza la letra** con la canción: pulsas una tecla al inicio de cada frase y escribes el texto. Se guarda un archivo `.srt`.
 3. **Monta los vídeos**: elige clips al azar según el ambiente (vibe) que quieras, cortando en cada frase de la letra, y prepara el script de Resolve que los encuadra en vertical, pone la letra y los exporta.
+   - **Nuevo: edits con imágenes de Pinterest.** En vez de clips, cada frase se llena con una ráfaga de imágenes de una categoría (una carpeta), que cambian **al ritmo de la canción** y salen a su **tamaño real**, sin redimensionar ([tutorial 5](tutoriales/05-crear-video.md#edits-con-imágenes-de-pinterest)).
 4. **(Opcional y experimental)** Subida en lote a TikTok e Instagram Reels. La subida a Instagram no se ha probado con éxito todavía; no cuentes con ella.
 
 Todo se maneja desde una **página web local** (solo en tu ordenador, no se sube nada a internet).
@@ -53,7 +54,7 @@ Todo se maneja desde una **página web local** (solo en tu ordenador, no se sube
 - Python 3.10 o superior
 - DaVinci Resolve (la versión gratuita sirve; probado con la 21.2)
 - ~5 GB de disco libre para la instalación (sin contar tus clips)
-- Opcional: tarjeta NVIDIA (etiquetado mucho más rápido) y ffmpeg (solo para subir a redes)
+- Opcional: tarjeta NVIDIA (etiquetado mucho más rápido) y ffmpeg (para los edits de Pinterest y para subir a redes)
 
 ## Documentación técnica
 

@@ -124,8 +124,25 @@
       <label>Lyrics (.srt)
         <span class="pathfield"><input id="b-lyrics"><button class="secondary" data-pick="file" data-ext=".srt" data-target="b-lyrics">Browse</button></span>
       </label>
+      <label>Edit type
+        <select id="b-type"><option value="anime">Anime clips</option><option value="pinterest">Pinterest images</option></select>
+      </label>
+      <label id="b-beats-row" hidden>Image length
+        <select id="b-beats">
+          <option value="0.125">⅛ beat</option>
+          <option value="0.25">¼ beat</option>
+          <option value="0.5">½ beat</option>
+          <option value="1" selected>1 beat</option>
+          <option value="2">2 beats</option>
+          <option value="4">4 beats</option>
+          <option value="0">Fixed 0.5 s (ignore beats)</option>
+        </select>
+      </label>
+      <label id="b-pin-row" hidden>Image folder (one sub-folder per category)
+        <span class="pathfield"><input id="b-pin" value="C:\Users\berti\Documents\Video\pinterest\media"><button class="secondary" data-pick="dir" data-target="b-pin">Browse</button></span>
+      </label>
       <div class="grid">
-        <label>Vibe <select id="b-vibe"><option value="">Any</option><option>energic</option><option>sad</option></select></label>
+        <label class="anime-only">Vibe <select id="b-vibe"><option value="">Any</option><option>energic</option><option>sad</option></select></label>
         <label>FPS <input id="b-fps" type="number" value="30" min="1" step="any"></label>
         <label>Project name <input id="b-name" value="video_project"></label>
         <label>Timelines <input id="b-count" type="number" value="1" min="1"></label>
@@ -133,7 +150,7 @@
       <label>Output folder (default: a <code>timelines</code> folder next to the song)
         <span class="pathfield"><input id="b-out"><button class="secondary" data-pick="dir" data-target="b-out">Browse</button></span>
       </label>
-      <label class="check"><input type="checkbox" id="b-same"> Restrict each edit to a single anime</label>
+      <label class="check anime-only"><input type="checkbox" id="b-same"> Restrict each edit to a single anime</label>
       <button id="btn-build">Build</button>
       <div id="build-job" class="job" hidden><pre class="log"></pre></div>
       <div id="build-result" hidden>

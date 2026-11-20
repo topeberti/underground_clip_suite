@@ -100,6 +100,20 @@ followed the project's scaling), so the script sets `scaleToCrop` on **both** th
 and the project. Note that this changes the project's image scaling for any timeline that
 uses project settings.
 
+### Pinterest (still-image) edits
+Build with `--edit-type pinterest` (or *Edit type → Pinterest images* in the web UI) puts
+still images in the clip table instead of video clips: one entry per image (changing on the song's beats, or every ≤ 0.5 s),
+`src = 0`, zoom 1.0. The script sets scaling to `centerCrop` ("center crop with no
+resizing") instead of `scaleToCrop`, so every image shows at its native pixel size, centered
+in 1080×1920. As with clips, this changes the project's scaling setting.
+
+**Stills can't be trimmed:** `AppendToTimeline` ignores `startFrame`/`endFrame` for an
+image and places it at the default still duration (5 s): 27 images gave a 135 s video.
+So Build first turns each used image into an H.264 clip (1 s, or longer than the longest image) at the timeline fps and native
+size (cached in `pinterest\media_clips\`, using ffmpeg from PATH or Subtitle Edit's copy),
+and the script cuts those clips like any video. H.264 needs even sizes, so an odd width or
+height gets 1 black pixel of padding. The picture itself is never scaled.
+
 ### Render burn-in works
 `SetRenderSettings({ExportSubtitle = true, SubtitleFormat = "BurnIn"})` with H.264 MP4
 produced burned-in subtitles in the timeline's subtitle style. No preset is needed. A saved

@@ -96,9 +96,9 @@ Verás cinco pestañas: **Dashboard, Library, Lyric Sync, Build y Upload**.
 
 ---
 
-## Paso 5 (solo si quieres subir a TikTok/Instagram): ffmpeg
+## Paso 5 (para edits de Pinterest o subir a TikTok/Instagram): ffmpeg
 
-No lo necesitas para crear vídeos. Solo para la función de subida (ver [Subir a redes](07-subir-a-redes.md)).
+No lo necesitas para los vídeos con clips de anime. Sí para los **edits con imágenes de Pinterest** ([tutorial 5](05-crear-video.md#edits-con-imágenes-de-pinterest)) y para la función de subida (ver [Subir a redes](07-subir-a-redes.md)). Si ya tienes Subtitle Edit con su ffmpeg en `Video\subtitle\ffmpeg`, los edits de Pinterest lo usan solos.
 
 1. Pulsa la tecla Windows, escribe `cmd` y abre "Símbolo del sistema".
 2. Escribe `winget install ffmpeg` y pulsa Enter.

@@ -31,6 +31,19 @@ from src.db import db_manager
 console = Console()
 
 MIN_SPEED = 0.5  # clips can be slowed to at most 50% — below this, skip the clip
+# Minimum gap between cut points — prevents sub-frame first segments when
+# an SRT file starts its first lyric at 1–33 ms instead of exactly 0.
+MIN_CUT_GAP = 0.1  # seconds
+
+
+def build_cut_points(lyric_blocks: list[dict]) -> list[float]:
+    """Segment starts: t=0 plus every lyric block start at least MIN_CUT_GAP after the previous."""
+    cut_points = [0.0]
+    for block in lyric_blocks:
+        t = block["start_ms"] / 1000.0
+        if t - cut_points[-1] >= MIN_CUT_GAP:
+            cut_points.append(t)
+    return cut_points
 
 
 def _can_fill_without_repetition(
@@ -124,15 +137,7 @@ def select_clips(
 
     # Cut points are built before anime selection so _can_fill_without_repetition
     # can use them during the feasibility check.
-    # Minimum gap between cut points — prevents sub-frame first segments when
-    # an SRT file starts its first lyric at 1–33 ms instead of exactly 0.
-    MIN_CUT_GAP = 0.1  # seconds
-
-    cut_points = [0.0]
-    for block in lyric_blocks:
-        t = block["start_ms"] / 1000.0
-        if t - cut_points[-1] >= MIN_CUT_GAP:
-            cut_points.append(t)
+    cut_points = build_cut_points(lyric_blocks)
 
     no_repeat = False  # True only when same_anime succeeds — drives used_paths logic below
 

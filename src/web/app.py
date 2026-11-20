@@ -214,11 +214,23 @@ class BuildBody(BaseModel):
     count: int = 1
     output_dir: str | None = None
     same_anime: bool = False
+    edit_type: str = "anime"
+    pinterest_dir: str | None = None
+    beats_per_image: float | None = 1   # None/0: fixed 0.5 s per image
 
 
 @app.post("/api/jobs/build")
 def job_build(body: BuildBody):
-    _require_db()
+    if body.edit_type not in ("anime", "pinterest"):
+        _bad("Edit type must be 'anime' or 'pinterest'.")
+    pinterest_dir = None
+    if body.edit_type == "pinterest":
+        if body.pinterest_dir:
+            pinterest_dir = Path(body.pinterest_dir).expanduser()
+            if not pinterest_dir.is_dir():
+                _bad(f"Image folder not found: {pinterest_dir}")
+    else:
+        _require_db()
     song = _existing(body.song, "Song", exts=AUDIO_EXTS)
     lyrics = _existing(body.lyrics, "Lyrics file")
     if body.vibe not in (None, "", "energic", "sad"):
@@ -238,6 +250,8 @@ def job_build(body: BuildBody):
         result = run_build(
             song, lyrics, body.vibe or None, body.fps, name, body.count,
             out_dir, body.same_anime, DB_PATH, console,
+            edit_type=body.edit_type, pinterest_dir=pinterest_dir,
+            beats_per_image=body.beats_per_image or None,
         )
         return {
             "files": [str(p) for p in result.fcpxml_paths],

@@ -36,6 +36,9 @@ El estilo de los subtítulos (tipo de letra, tamaño, posición) no se puede pon
 
 | Campo | Qué poner |
 |---|---|
+| **Edit type** | `Anime clips` = un clip de vídeo por frase · `Pinterest images` = imágenes rápidas (ver abajo) |
+| **Image folder** | Solo con Pinterest: carpeta con **una subcarpeta por categoría**. Por defecto `C:\Users\berti\Documents\Video\pinterest\media` |
+| **Image length** | Solo con Pinterest: cada cuántos **beats** de la canción cambia la imagen (⅛, ¼, ½, 1, 2 o 4), o `Fixed 0.5 s` para ignorar el ritmo |
 | **Song** | La canción. Pulsa **Browse** y elígela |
 | **Lyrics (.srt)** | El archivo de letra con tiempos |
 | **Vibe** | `Any` = todos los clips · `energic` = clips intensos · `sad` = clips calmados. Con un vibe elegido también entran clips `neutral`, con menos probabilidad |
@@ -53,7 +56,30 @@ El estilo de los subtítulos (tipo de letra, tamaño, posición) no se puede pon
 - Evita repetir el mismo clip dos veces seguidas. En modo "Same anime" no repite ningún clip.
 - Mide cada clip: si trae **bandas negras dentro de la imagen** (por ejemplo *Arcane*), calcula el zoom justo para quitarlas.
 - Parte en **dos líneas** las frases de más de 20 letras para que quepan en vertical. Tu `.srt` original no se toca.
+- Con **Pinterest images**: para cada frase elige una **categoría al azar** (no repite ninguna hasta haber usado todas, y nunca la misma en dos frases seguidas) y la llena con imágenes de esa categoría, que cambian **al ritmo de la canción** (según *Image length*), al azar pero **nunca la misma dos veces seguidas**. Las imágenes **no se redimensionan**: salen a su tamaño real, centradas en el vídeo vertical (si son más pequeñas que 1080×1920 queda borde negro). Vibe y "single anime" no se usan.
 - Guarda el script `videogen_build` en el menú de scripts de Resolve. **Cada Build lo sustituye**, así que ejecútalo en Resolve antes de generar otra canción.
+
+### Edits con imágenes de Pinterest
+
+En **Edit type** elige **Pinterest images**. Organiza las imágenes así (por defecto en
+`C:\Users\berti\Documents\Video\pinterest\media`):
+
+```
+media\
+  azul\       ← cada subcarpeta es una categoría
+    foto1.jpg
+    foto2.png
+  glitch\
+  rojo\
+  ...
+```
+
+- Formatos: `.jpg`, `.jpeg`, `.png`, `.bmp`, `.tif`, `.tiff`. Cada categoría necesita **al menos 2 imágenes** (si no, se ignora).
+- **Categorías:** funcionan como una baraja. Se usan todas, en orden al azar, antes de repetir ninguna, y nunca la misma en dos frases seguidas.
+- **Image length:** cada cuántos beats cambia la imagen (⅛ a 4). Los beats se detectan en la propia canción; el BPM aparece en el registro del Build. Si las imágenes van al doble o a la mitad de rápido de lo que esperas, es que la detección leyó el tempo al doble o a la mitad: elige la opción de al lado. Una imagen nunca dura menos de 3 fotogramas (0,1 s), así que ⅛ de beat en canciones rápidas va igual que ¼.
+- **Tamaño real:** las imágenes no se escalan nunca. Si una imagen tiene ancho o alto impar se le añade 1 píxel negro (necesario para el vídeo), que no se nota.
+- **ffmpeg:** el Build convierte cada imagen usada en un clip corto (Resolve no deja recortar imágenes desde un script). Se guardan en `pinterest\media_clips\` y solo se crean la primera vez. Necesita ffmpeg ([instalación, paso 5](01-instalacion.md)).
+- No se genera `.fcpxml` en este modo, solo el script de Resolve.
 
 ---
 

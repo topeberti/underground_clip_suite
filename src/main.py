@@ -172,6 +172,9 @@ def build(
     count: int = typer.Option(1, help="Number of timelines to generate"),
     output_dir: Path = typer.Option(None, help="Output folder for FCPXML files"),
     same_anime: bool = typer.Option(False, help="Restrict all clips in an edit to the same anime"),
+    edit_type: str = typer.Option("anime", help="'anime' (video clips) or 'pinterest' (image sequences per lyric block)"),
+    pinterest_dir: Path = typer.Option(None, help="Image folder for --edit-type pinterest (one sub-folder per category)"),
+    beats_per_image: float = typer.Option(1.0, help="Pinterest: song beats per image (0.125, 0.25, 0.5, 1, 2, 4), or 0 for a fixed 0.5 s"),
 ):
     """Build one or more DaVinci Resolve project scaffolds."""
     if not song.exists():
@@ -186,13 +189,17 @@ def build(
     if count < 1:
         console.print("[red]--count must be at least 1.[/red]")
         raise typer.Exit(1)
+    if edit_type not in ("anime", "pinterest"):
+        console.print(f"[red]Invalid edit type '{edit_type}'. Must be 'anime' or 'pinterest'.[/red]")
+        raise typer.Exit(1)
 
     resolved_output_dir = output_dir if output_dir is not None else Path(__file__).parent.parent / "output"
 
     from src.timeline.build_runner import run_build
     try:
         result = run_build(
-            song, lyrics, vibe, fps, name, count, resolved_output_dir, same_anime, DB_PATH, console
+            song, lyrics, vibe, fps, name, count, resolved_output_dir, same_anime, DB_PATH, console,
+            edit_type=edit_type, pinterest_dir=pinterest_dir, beats_per_image=beats_per_image or None,
         )
     except RuntimeError as exc:
         console.print(f"[red]{exc}[/red]")
@@ -204,7 +211,7 @@ def build(
         raise typer.Exit(1)
 
     from src.timeline.resolve_script import SCRIPT_NAME, TEMPLATE_NAME
-    console.print(f"\n[green bold]Done![/green bold] {len(result.fcpxml_paths)} timeline(s) saved to [cyan]{resolved_output_dir}[/cyan]")
+    console.print(f"\n[green bold]Done![/green bold] {len(result.timelines)} timeline(s) prepared in [cyan]{resolved_output_dir}[/cyan]")
     console.print("\n[bold]Next step in DaVinci Resolve[/bold] (with a project open):")
     console.print(f"  Workspace → Scripts → [cyan]{SCRIPT_NAME}[/cyan]")
     console.print(f"  It builds the edit(s) from the [cyan]{TEMPLATE_NAME}[/cyan] timeline and renders to [cyan]{result.render_dir}[/cyan]")

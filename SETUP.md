@@ -10,7 +10,7 @@
 | Python | 3.10 o superior (recomendado 3.11 o 3.12). Marcar **Add python.exe to PATH** al instalar |
 | DaVinci Resolve | La versión gratuita funciona (probado en 21.2). Monta y exporta los vídeos con el script `videogen_build` |
 | Disco | ~5 GB libres para el programa y el modelo de IA |
-| ffmpeg | Opcional: solo para subir a TikTok / Instagram |
+| ffmpeg | Opcional: para los edits de Pinterest y para subir a TikTok / Instagram |
 | GPU NVIDIA | Opcional: acelera mucho el etiquetado |
 
 > No hace falta configurar la API de scripting de DaVinci Resolve: el script se instala solo en su menú **Workspace → Scripts** al hacer Build. Solo hay que crear una vez la línea de tiempo `videogen_template` ([tutorial 5](tutoriales/05-crear-video.md)).
@@ -69,13 +69,18 @@ python src/main.py serve
 - Vídeo: `.mp4`, `.mov`, `.avi`, `.mkv`, `.webm`
 - Audio: `.mp3`, `.wav`, `.flac`, `.m4a`, `.aac`, `.ogg`
 
-## ffmpeg (solo para subir a redes)
+## ffmpeg (edits de Pinterest y subida a redes)
 
 ```powershell
 winget install ffmpeg
 ```
 
 Cierra y vuelve a abrir la terminal después. Comprueba con `ffmpeg -version`.
+
+Los edits de Pinterest usan ffmpeg para convertir cada imagen en un clip corto (Resolve no
+deja recortar imágenes fijas desde un script). Si ffmpeg no está en el PATH, el programa usa
+la copia de Subtitle Edit en `C:\Users\berti\Documents\Video\subtitle\ffmpeg\ffmpeg.exe`
+(`FALLBACK_FFMPEG` en `src/timeline/image_selector.py`).
 
 ## Siguientes pasos
 

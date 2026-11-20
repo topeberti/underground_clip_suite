@@ -17,6 +17,8 @@ Resolve API behaviour the script works around (measured on 21.2 free):
   user-made template timeline whose subtitle track already carries the style.
 - Speed changes can't be set either, so builds for Resolve only use clips that are long
   enough for their segment (see clip_selector min_speed).
+- Image scaling is set on the timeline AND the project (timeline-only was ignored):
+  "scaleToCrop" for video clips, "centerCrop" (no resizing) for still-image edits.
 """
 
 import os
@@ -130,8 +132,10 @@ def write_lua(
     render_dir: Path,
     zooms: dict[str, float],
     script_path: Path,
+    scaling: str = "scaleToCrop",
 ) -> Path:
-    """Write the Resolve script.
+    """Write the Resolve script. scaling: Resolve's timelineInputResMismatchBehavior,
+    "scaleToCrop" (fill the frame) or "centerCrop" (native size, never resized).
 
     builds: [{"name": str, "clips": [{"path", "timeline_start_sec", "clip_start_sec", "duration_sec"}]}]
     """
@@ -156,6 +160,7 @@ def write_lua(
         f"local TEMPLATE = {_lua_str(TEMPLATE_NAME)}",
         f"local RENDER_PRESET = {_lua_str(RENDER_PRESET)}",
         f"local OUT_W, OUT_H = {OUT_W}, {OUT_H}",
+        f"local SCALING = {_lua_str(scaling)}",
         *lines,
     ])
 
@@ -239,16 +244,16 @@ local ok, err = pcall(function()
             end
             if #all > 0 then tl:DeleteClips(all, false) end
 
-            -- Vertical frame. "Scale to crop" fills it from each clip's own resolution; the
-            -- per-clip zoom below only removes baked-in letterbox. Set on the project too:
-            -- a timeline-only setting was seen to be ignored.
+            -- Vertical frame. "Scale to crop" fills it from each clip's own resolution (the
+            -- per-clip zoom below only removes baked-in letterbox); "center crop" keeps stills
+            -- at native size. Set on the project too: a timeline-only setting was ignored.
             tl:SetSetting("useCustomSettings", "1")
             tl:SetSetting("timelineResolutionWidth", tostring(OUT_W))
             tl:SetSetting("timelineResolutionHeight", tostring(OUT_H))
             tl:SetSetting("timelineOutputResolutionWidth", tostring(OUT_W))
             tl:SetSetting("timelineOutputResolutionHeight", tostring(OUT_H))
-            tl:SetSetting("timelineInputResMismatchBehavior", "scaleToCrop")
-            project:SetSetting("timelineInputResMismatchBehavior", "scaleToCrop")
+            tl:SetSetting("timelineInputResMismatchBehavior", SCALING)
+            project:SetSetting("timelineInputResMismatchBehavior", SCALING)
             local fps = tonumber(tl:GetSetting("timelineFrameRate")) or 30
             local start = tl:GetStartFrame()
 

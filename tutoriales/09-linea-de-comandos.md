@@ -46,6 +46,16 @@ python src\main.py remove-anime --name "Naruto" --dry-run
 | `--count` | 1 | Cuántas variantes generar |
 | `--output-dir` | `output\` | Dónde guardar los `.fcpxml` (nota: la interfaz web usa por defecto `timelines` junto a la canción) |
 | `--same-anime` | no | Una sola serie por montaje |
+| `--edit-type` | `anime` | `anime` (clips de vídeo) o `pinterest` (imágenes por categoría) |
+| `--pinterest-dir` | `C:\Users\berti\Documents\Video\pinterest\media` | Carpeta de imágenes, una subcarpeta por categoría (solo `pinterest`) |
+| `--beats-per-image` | 1 | Solo `pinterest`: beats por imagen (`0.125`, `0.25`, `0.5`, `1`, `2`, `4`), o `0` para 0,5 s fijos |
+
+Ejemplo de edit de Pinterest, una imagen cada medio beat:
+
+```bat
+python src\main.py build --song "D:\Musica\tema.mp3" --lyrics "D:\Musica\tema.srt" ^
+  --edit-type pinterest --beats-per-image 0.5 --name tema_pin --count 3
+```
 
 ## Opciones de `upload-batch`
 

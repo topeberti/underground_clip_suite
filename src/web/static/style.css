@@ -17,6 +17,7 @@ main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 4rem; }
 .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .8rem 1rem; }
 .stat b { display: block; font-size: 1.6rem; }
 .stat span { color: var(--muted); font-size: .85rem; }
+[hidden] { display: none !important; }
 label { display: block; margin-bottom: .7rem; color: var(--muted); }
 label.check { display: flex; gap: .5rem; align-items: center; color: var(--text); }
 label.inline { display: inline-flex; gap: .5rem; align-items: center; margin: 0; }

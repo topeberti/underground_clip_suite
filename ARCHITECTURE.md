@@ -15,7 +15,7 @@ STEP 1 — PARSE LYRICS
 STEP 2 — ANALYZE SONG
   beat_detector.py (librosa)
   → {bpm, beat_times: [float, ...], duration_sec}
-  Note: only duration_sec is used downstream; bpm/beat_times are informational.
+  Note: anime edits use only duration_sec; pinterest edits also cut images on beat_times.
 
 STEP 3 — SELECT CLIPS
   clip_selector.py
@@ -28,6 +28,19 @@ STEP 3 — SELECT CLIPS
     to fill the segment exactly
   → optional same-anime mode: restrict all clips to one anime folder, no repetition
   → List of {path, timeline_start_sec, clip_start_sec, duration_sec, speed}
+
+STEP 3 (alt) — PINTEREST EDIT (build --edit-type pinterest)
+  image_selector.py
+  → same cut points; per segment a category folder of <pinterest_dir>/<category>/, drawn like a
+    shuffled deck (all used before any repeats, never the same in consecutive segments)
+  → image changes on the song's detected beats (beat_detector beat_times, gaps filled
+    from the BPM), every N beats or 1/N beat (--beats-per-image 0.125|0.25|0.5|1|2|4); with 0,
+    segment split evenly into stills of ≤ 0.5 s. Whole frames; a beat < 3 frames from a
+    lyric cut is skipped. Random image per slot, never the same twice in a row
+  → same list format (clip_start_sec 0, speed 1); no FCPXML, no zoom measuring
+  → still_clips(): each used image → H.264 clip (ffmpeg, timeline fps, native size, odd
+    sides padded 1 px) cached in <pinterest_dir>_clips/, because Resolve ignores
+    startFrame/endFrame for stills; the Resolve script uses "centerCrop" (no resizing)
 
 STEP 4 — BUILD FCPXML
   fcpxml_builder.py
@@ -186,6 +199,7 @@ clips (
 | `src/lyrics/srt_parser.py` | Parse .srt → list of block dicts |
 | `src/timeline/beat_detector.py` | librosa BPM + duration analysis |
 | `src/timeline/clip_selector.py` | Lyric-boundary cut points → weighted clip assignment |
+| `src/timeline/image_selector.py` | Pinterest edits: per-segment random category → ≤ 0.5 s still sequence |
 | `src/timeline/fcpxml_builder.py` | Render clip list → .fcpxml file |
 | `src/tagger/clip_tagger.py` | OpenCLIP semantic tag extraction per clip |
 | `src/tagger/energy_scorer.py` | Optical-flow + brightness-variance energy score |
