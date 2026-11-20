@@ -74,12 +74,14 @@ media\
   ...
 ```
 
-- Formatos: `.jpg`, `.jpeg`, `.png`, `.bmp`, `.tif`, `.tiff`. Cada categoría necesita **al menos 2 imágenes** (si no, se ignora).
+- Formatos: `.jpg`, `.jpeg`, `.png`, `.webp`, `.bmp`, `.tif`, `.tiff`. Cada categoría necesita **al menos 2 imágenes** (si no, se ignora).
 - **Categorías:** funcionan como una baraja. Se usan todas, en orden al azar, antes de repetir ninguna, y nunca la misma en dos frases seguidas.
 - **Image length:** cada cuántos beats cambia la imagen (⅛ a 4). Los beats se detectan en la propia canción; el BPM aparece en el registro del Build. Si las imágenes van al doble o a la mitad de rápido de lo que esperas, es que la detección leyó el tempo al doble o a la mitad: elige la opción de al lado. Una imagen nunca dura menos de 3 fotogramas (0,1 s), así que ⅛ de beat en canciones rápidas va igual que ¼.
 - **Tamaño real:** las imágenes no se escalan nunca. Si una imagen tiene ancho o alto impar se le añade 1 píxel negro (necesario para el vídeo), que no se nota.
 - **ffmpeg:** el Build convierte cada imagen usada en un clip corto (Resolve no deja recortar imágenes desde un script). Se guardan en `pinterest\media_clips\` y solo se crean la primera vez. Necesita ffmpeg ([instalación, paso 5](01-instalacion.md)).
 - No se genera `.fcpxml` en este modo, solo el script de Resolve.
+
+**Descargar imágenes de pines o tableros:** en la pestaña **Pinterest**, pega el enlace de un pin o de un **tablero entero** (o varios, uno por línea; valen los enlaces cortos `pin.it` y las secciones de un tablero), elige la **categoría** (una de tus carpetas, o escribe un nombre nuevo y se crea) y pulsa **Download**. Se bajan todas las imágenes (las de cada pin del tablero, también las de los carruseles y las secciones) a su resolución original. Las que ya tengas se saltan. Solo funciona con pines y tableros públicos, y los vídeos no se descargan.
 
 ---
 

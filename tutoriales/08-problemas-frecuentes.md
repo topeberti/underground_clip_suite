@@ -70,6 +70,23 @@ Tienes pocos clips de ese vibe. Añade más variedad o usa vibe `Any`.
 
 ---
 
+## Descargar de Pinterest
+
+### "Not a Pinterest pin or board link"
+El enlace no es de un pin (`pinterest.com/pin/...`) ni de un tablero (`pinterest.com/usuario/tablero/`). Copia el enlace desde la barra del navegador con el pin o el tablero abierto. El enlace de un perfil (`pinterest.com/usuario/`) no vale: abre el tablero que quieras.
+
+### "Not found on Pinterest" / "Board ... not found"
+El pin se ha borrado o el tablero es **secreto**. Solo se pueden descargar pines y tableros públicos.
+
+### "No images found"
+Es un pin de vídeo. Los vídeos no se descargan.
+
+### "Pinterest refused every size of this image"
+Pinterest no ha dejado bajar esa imagen en ningún tamaño. Las demás se descargan igual. Vuelve a pulsar **Download** más tarde: solo se intentan las que faltan.
+
+### Quiero bajar solo los pines nuevos de un tablero
+Vuelve a pegar el enlace del tablero con la misma categoría: las imágenes que ya tienes se saltan.
+
 ## DaVinci Resolve
 
 ### "Media Offline"

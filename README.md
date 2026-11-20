@@ -20,6 +20,7 @@ Tus clips + canción + letra  →  Video Generator  →  script de Resolve  → 
 2. **Sincroniza la letra** con la canción: pulsas una tecla al inicio de cada frase y escribes el texto. Se guarda un archivo `.srt`.
 3. **Monta los vídeos**: elige clips al azar según el ambiente (vibe) que quieras, cortando en cada frase de la letra, y prepara el script de Resolve que los encuadra en vertical, pone la letra y los exporta.
    - **Nuevo: edits con imágenes de Pinterest.** En vez de clips, cada frase se llena con una ráfaga de imágenes de una categoría (una carpeta), que cambian **al ritmo de la canción** y salen a su **tamaño real**, sin redimensionar ([tutorial 5](tutoriales/05-crear-video.md#edits-con-imágenes-de-pinterest)).
+   - **Descarga de Pinterest:** pega el enlace de un pin o de un **tablero entero** en la pestaña **Pinterest** y se bajan todas sus imágenes a tamaño original, directamente a la carpeta de una categoría ([tutorial 5](tutoriales/05-crear-video.md#edits-con-imágenes-de-pinterest)).
 4. **(Opcional y experimental)** Subida en lote a TikTok e Instagram Reels. La subida a Instagram no se ha probado con éxito todavía; no cuentes con ella.
 
 Todo se maneja desde una **página web local** (solo en tu ordenador, no se sube nada a internet).

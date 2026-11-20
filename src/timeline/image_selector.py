@@ -23,7 +23,7 @@ from pathlib import Path
 
 from src.timeline.clip_selector import build_cut_points
 
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 MAX_IMAGE_SEC = 0.5     # fixed-length mode (no beat sync)
 MIN_IMAGE_FRAMES = 3    # beat cuts closer than this to a lyric cut are skipped: no flashes
 BEATS_PER_IMAGE = (0.125, 0.25, 0.5, 1, 2, 4)

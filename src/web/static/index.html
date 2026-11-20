@@ -14,6 +14,7 @@
     <button data-tab="library">Library</button>
     <button data-tab="lyrics">Lyric Sync</button>
     <button data-tab="build">Build</button>
+    <button data-tab="pinterest">Pinterest</button>
     <button data-tab="upload">Upload</button>
   </nav>
 </header>
@@ -161,6 +162,26 @@
           <li>It builds the edit(s) from the <b id="build-template"></b> timeline and renders the videos to <code id="build-render"></code></li>
         </ol>
       </div>
+    </div>
+  </section>
+
+  <!-- PINTEREST -->
+  <section id="tab-pinterest" class="tab">
+    <h2>Download Pinterest pins and boards</h2>
+    <div class="card">
+      <p class="muted">Saves every image of each pin or whole board (carousels and board sections too) at full size into a category folder, ready for Pinterest edits in Build. Public pins and boards only; images you already have are skipped.</p>
+      <label>Pin or board link(s), one per line (pinterest.com/pin/…, pinterest.com/user/board/ or pin.it/…)
+        <textarea id="pd-urls" rows="4" placeholder="https://pinterest.com/user/board/"></textarea>
+      </label>
+      <label>Media folder (one sub-folder per category)
+        <span class="pathfield"><input id="pd-media" value="C:\Users\berti\Documents\Video\pinterest\media"><button class="secondary" data-pick="dir" data-target="pd-media">Browse</button></span>
+      </label>
+      <label>Category (pick one or type a new name)
+        <input id="pd-category" list="pd-categories" placeholder="azul">
+        <datalist id="pd-categories"></datalist>
+      </label>
+      <button id="btn-pin-download">Download</button>
+      <div id="pd-job" class="job" hidden><progress></progress><pre class="log"></pre></div>
     </div>
   </section>
 

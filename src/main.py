@@ -10,6 +10,7 @@ Commands:
   stats        Show DB statistics
   lyric-sync   Tap-along lyric syncer — creates a .srt file from an audio file
   build        Build a DaVinci Resolve project
+  pin-download Download every image of a Pinterest pin or board
   serve        Start the local web UI
 
 Usage examples:
@@ -17,6 +18,7 @@ Usage examples:
   python src/main.py tag --folder "D:/VideoPacka/Pack01"
   python src/main.py lyric-sync "D:/track.mp3"
   python src/main.py build --song "D:/track.mp3" --lyrics "D:/track.srt" --vibe energic --fps 30 --name "my_edit_v1"
+  python src/main.py pin-download "https://pinterest.com/pin/123/" --category azul
   python src/main.py remove-anime --name "Naruto" --dry-run
   python src/main.py remove-anime --name "Naruto"
 """
@@ -215,6 +217,29 @@ def build(
     console.print("\n[bold]Next step in DaVinci Resolve[/bold] (with a project open):")
     console.print(f"  Workspace → Scripts → [cyan]{SCRIPT_NAME}[/cyan]")
     console.print(f"  It builds the edit(s) from the [cyan]{TEMPLATE_NAME}[/cyan] timeline and renders to [cyan]{result.render_dir}[/cyan]")
+
+
+@app.command()
+def pin_download(
+    urls: list[str] = typer.Argument(..., help="Pinterest pin or board link(s), pin.it short links or pin ids"),
+    category: str = typer.Option(None, help="Save into <media-dir>/<category> (e.g. 'azul')"),
+    media_dir: Path = typer.Option(None, help="Pinterest media folder (default: the one Build uses)"),
+    out: Path = typer.Option(None, help="Exact folder to save into (overrides --media-dir/--category)"),
+):
+    """Download every image of Pinterest pins or whole boards at full resolution."""
+    from src.pinterest.pin_downloader import download
+    from src.timeline.image_selector import DEFAULT_MEDIA_DIR
+
+    target = out or (media_dir or DEFAULT_MEDIA_DIR) / (category or "")
+    failed = 0
+    for url in urls:
+        try:
+            download(url, target, console)
+        except Exception as exc:
+            console.print(f"[red]{url}: {exc}[/red]")
+            failed += 1
+    if failed:
+        raise typer.Exit(1)
 
 
 DEFAULT_UPLOAD_CONFIG = Path(__file__).parent.parent / "config" / "upload_config.json"

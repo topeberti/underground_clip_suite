@@ -18,7 +18,7 @@ Instalar  →  Organizar clips  →  Etiquetar  →  Sincronizar letra  →  Cre
 | 2 | [Organizar los clips](02-organizar-clips.md) | **Antes de etiquetar.** Si lo haces mal, hay que repetir el etiquetado |
 | 3 | [Etiquetar los clips](03-etiquetar-clips.md) | Cada vez que añadas clips nuevos |
 | 4 | [Sincronizar la letra](04-sincronizar-letras.md) | Una vez por canción (si no tienes ya un `.srt`) |
-| 5 | [Crear el vídeo](05-crear-video.md) | Para generar las líneas de tiempo |
+| 5 | [Crear el vídeo](05-crear-video.md) | Para generar las líneas de tiempo (y descargar imágenes de Pinterest) |
 | 6 | [Gestionar la biblioteca](06-gestionar-biblioteca.md) | Borrar clips o series, ver estadísticas |
 | 7 | [Subir a redes](07-subir-a-redes.md) | Opcional y experimental (Instagram sin probar) |
 | 8 | [Problemas frecuentes](08-problemas-frecuentes.md) | Si algo falla |
@@ -33,4 +33,5 @@ Instalar  →  Organizar clips  →  Etiquetar  →  Sincronizar letra  →  Cre
 - **SRT**: archivo de texto con la letra y los tiempos de cada frase.
 - **Script de Resolve (`videogen_build`)**: lo deja el programa en el menú Workspace → Scripts de Resolve; al ejecutarlo monta y exporta los vídeos.
 - **FCPXML**: archivo de línea de tiempo que también se guarda, por si prefieres importar a mano.
+- **Categoría (Pinterest)**: una subcarpeta de `pinterest\media` con imágenes de un estilo (azul, glitch…). La pestaña **Pinterest** descarga pines o tableros enteros dentro de una.
 - **Línea de tiempo (timeline)**: la secuencia de clips ordenados que verás en DaVinci Resolve.

@@ -57,6 +57,14 @@ python src\main.py build --song "D:\Musica\tema.mp3" --lyrics "D:\Musica\tema.sr
   --edit-type pinterest --beats-per-image 0.5 --name tema_pin --count 3
 ```
 
+## Descargar imágenes de pines y tableros (`pin-download`)
+
+Baja todas las imágenes de uno o varios pines o tableros enteros a su resolución original. `--category azul` las guarda en `pinterest\media\azul` (o en `--media-dir`), y `--out` elige una carpeta exacta.
+
+```bat
+python src\main.py pin-download "https://pinterest.com/usuario/mi-tablero/" "https://pin.it/abc" --category azul
+```
+
 ## Opciones de `upload-batch`
 
 `--platforms` (tiktok instagram), `--delay` (10 s), `--privacy` (public / followers / private), `--skip-normalize`, `--dry-run`, `--config`.

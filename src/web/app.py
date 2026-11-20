@@ -273,6 +273,42 @@ class UploadBody(BaseModel):
     dry_run: bool = False
 
 
+class PinBody(BaseModel):
+    urls: list[str]
+    media_dir: str
+    category: str
+
+
+@app.post("/api/jobs/pin-download")
+def job_pin_download(body: PinBody):
+    urls = [u.strip() for u in body.urls if u.strip()]
+    if not urls:
+        _bad("Paste at least one pin or board link.")
+    if not body.media_dir.strip():
+        _bad("Choose the media folder.")
+    category = body.category.strip()
+    if not category or any(c in category for c in r'\/:*?"<>|') or category in (".", ".."):
+        _bad("Enter a category name (a plain folder name, e.g. 'azul').")
+    folder = Path(body.media_dir.strip()).expanduser() / category
+
+    def fn(console, on_progress):
+        from src.pinterest.pin_downloader import download
+        saved, failed = [], []
+        for i, url in enumerate(urls, 1):
+            try:
+                if len(urls) > 1:
+                    console.print(f"--- Link {i}/{len(urls)}")
+                saved += [str(p) for p in download(url, folder, console, on_progress)]
+            except Exception as exc:
+                console.print(f"{url}: {exc}")
+                failed.append(url)
+        if failed and not saved:
+            raise RuntimeError(f"Could not download {len(failed)} link(s).")
+        return {"files": saved, "failed": failed, "folder": str(folder)}
+
+    return _start("pin-download", f"Download {len(urls)} Pinterest link(s)", fn)
+
+
 @app.post("/api/jobs/upload")
 def job_upload(body: UploadBody):
     folder = _existing(body.folder, "Folder", dir_=True)

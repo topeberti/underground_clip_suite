@@ -77,7 +77,7 @@ function runJob(url, body, box) {
 }
 
 // ---------------------------------------------------------------- tabs
-const loaders = { dashboard: loadStats, library: () => loadClips(), upload: loadUploadInfo };
+const loaders = { dashboard: loadStats, library: () => loadClips(), pinterest: loadCategories, upload: loadUploadInfo };
 function showTab(name) {
   document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === `tab-${name}`));
@@ -127,7 +127,7 @@ $("pk-up").onclick = () => pickerLoad(picker.parent ?? "");
 $("pk-go").onclick = () => pickerLoad($("pk-path").value);
 $("pk-path").onkeydown = (e) => e.key === "Enter" && pickerLoad($("pk-path").value);
 $("pk-cancel").onclick = () => $("picker").close();
-$("pk-choose").onclick = () => { $(picker.target).value = picker.cur; $("picker").close(); };
+$("pk-choose").onclick = () => { $(picker.target).value = picker.cur; $(picker.target).dispatchEvent(new Event("change")); $("picker").close(); };
 
 // ---------------------------------------------------------------- dashboard
 async function loadStats() {
@@ -439,6 +439,29 @@ $("btn-build").onclick = (e) => guarded(e.target, async () => {
   $("build-template").textContent = job.result.template;
   $("build-render").textContent = job.result.render_dir;
   $("build-result").hidden = false;
+});
+
+// ---------------------------------------------------------------- pinterest
+async function loadCategories() {
+  let dirs = [];
+  try {
+    const data = await api(`/api/fs/list?path=${encodeURIComponent($("pd-media").value.trim())}&ext=.none`);
+    dirs = data.entries.filter((x) => x.is_dir).map((x) => x.name);
+  } catch { /* folder doesn't exist yet: no suggestions */ }
+  $("pd-categories").replaceChildren(...dirs.map((d) => el("option", { value: d })));
+}
+$("pd-media").addEventListener("change", loadCategories);
+
+$("btn-pin-download").onclick = (e) => guarded(e.target, async () => {
+  const job = await runJob("/api/jobs/pin-download", {
+    urls: $("pd-urls").value.split(/\s+/).filter(Boolean),
+    media_dir: $("pd-media").value.trim(),
+    category: $("pd-category").value.trim(),
+  }, $("pd-job"));
+  if (job.status !== "done") return;
+  const { files, failed } = job.result;
+  toast(`${files.length} image(s) in ${job.result.folder}.` + (failed.length ? ` ${failed.length} link(s) failed, see the log.` : ""), failed.length > 0);
+  loadCategories();
 });
 
 // ---------------------------------------------------------------- upload

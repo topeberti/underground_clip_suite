@@ -186,11 +186,52 @@ clips (
 
 ---
 
+## Pinterest media download
+
+`src/pinterest/pin_downloader.py` fills the category folders the Pinterest edit reads
+(`<pinterest_dir>/<category>/`). Entry point `download(url, out_dir)`; the CLI
+`pin-download` and the web route `POST /api/jobs/pin-download` (Pinterest tab, body
+`{urls, media_dir, category}`) both call it.
+
+```
+link ──parse_link──► ("pin", id)                         pinterest.com/pin/[slug--]<id>/, bare id
+                  └► ("board", user, slug, section|None)  pinterest.com/<user>/<board>[/<section>]/
+                     (pin.it short links are followed to one of the above first)
+
+pin   → PinResource {id, field_set_key: detailed}
+board → BoardResource {username, slug} → board id
+        → BoardFeedResource {board_id}            (whole board)
+        + BoardSectionPinsResource {section_id}   (each section; or only the named one)
+        paginated 25 at a time with options.bookmarks until bookmark "-end-"
+
+each pin → image_urls(): carousel_data.carousel_slots[].images,
+                         story_pin_data.pages[].blocks[story_pin_image_block].image.images,
+                         else images (skipped for video pins)
+         → per image, candidate URLs best first (originals, then largest sizes)
+```
+
+- These are Pinterest's own web-app endpoints (`/resource/<Name>/get/?data={"options":…}`),
+  public, no login. Without the `X-Pinterest-PWS-Handler` header they answer
+  403 "Invalid Resource Request".
+- Board feed items carry the same image fields as a detailed pin, so a board costs one
+  request per 25 pins, not one per pin. Feeds also contain non-pin items (`type: "story"`),
+  which are skipped.
+- Idea pin pages sometimes list the original as `.jpg` when it is a `.png` (that URL
+  answers 403). `_variants()` puts the other extension right after each original, then
+  the sized versions.
+- Files are named `<image hash>.<ext>`, like the hand-downloaded media. An image whose hash
+  is already in the folder (any extension) is skipped, so re-running a board only fetches
+  new pins. Writes go through a `.part` file.
+- `.webp` is in `image_selector.IMAGE_EXTENSIONS`: ffmpeg turns it into a still clip like
+  any other image.
+
+---
+
 ## Module Map
 
 | Module | Responsibility |
 |--------|----------------|
-| `src/main.py` | CLI (typer). All commands: init-db, tag, retag, remove-clip, remove-anime, stats, build, upload-batch, setup-upload, upload-status |
+| `src/main.py` | CLI (typer). All commands: init-db, tag, retag, remove-clip, remove-anime, stats, build, pin-download, upload-batch, setup-upload, upload-status |
 | `src/web/app.py` | Local web UI (FastAPI, 127.0.0.1). `/api/*` routes + static page. Start: `python src/main.py serve` |
 | `src/web/jobs.py` | Background job threads; rich output captured and streamed to the browser via SSE |
 | `src/web/fs.py` | Directory listing for the file-picker |
@@ -200,6 +241,7 @@ clips (
 | `src/timeline/beat_detector.py` | librosa BPM + duration analysis |
 | `src/timeline/clip_selector.py` | Lyric-boundary cut points → weighted clip assignment |
 | `src/timeline/image_selector.py` | Pinterest edits: per-segment random category → ≤ 0.5 s still sequence |
+| `src/pinterest/pin_downloader.py` | Download every image of a Pinterest pin or board (CLI `pin-download`, web Pinterest tab) |
 | `src/timeline/fcpxml_builder.py` | Render clip list → .fcpxml file |
 | `src/tagger/clip_tagger.py` | OpenCLIP semantic tag extraction per clip |
 | `src/tagger/energy_scorer.py` | Optical-flow + brightness-variance energy score |
