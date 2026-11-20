@@ -8,12 +8,12 @@
 |---|---|
 | Sistema | Windows 10 / 11 |
 | Python | 3.10 o superior (recomendado 3.11 o 3.12). Marcar **Add python.exe to PATH** al instalar |
-| DaVinci Resolve | 18+ (la versión gratuita funciona). Solo se usa para **importar** el `.fcpxml` |
+| DaVinci Resolve | La versión gratuita funciona (probado en 21.2). Monta y exporta los vídeos con el script `videogen_build` |
 | Disco | ~5 GB libres para el programa y el modelo de IA |
 | ffmpeg | Opcional: solo para subir a TikTok / Instagram |
 | GPU NVIDIA | Opcional: acelera mucho el etiquetado |
 
-> No hace falta configurar la API de scripting de DaVinci Resolve ni tener Resolve abierto para generar las líneas de tiempo.
+> No hace falta configurar la API de scripting de DaVinci Resolve: el script se instala solo en su menú **Workspace → Scripts** al hacer Build. Solo hay que crear una vez la línea de tiempo `videogen_template` ([tutorial 5](tutoriales/05-crear-video.md)).
 
 ## Instalación automática (recomendada)
 

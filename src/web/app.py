@@ -234,11 +234,17 @@ def job_build(body: BuildBody):
 
     def fn(console, on_progress):
         from src.timeline.build_runner import run_build
-        paths = run_build(
+        from src.timeline.resolve_script import SCRIPT_NAME, TEMPLATE_NAME
+        result = run_build(
             song, lyrics, body.vibe or None, body.fps, name, body.count,
             out_dir, body.same_anime, DB_PATH, console,
         )
-        return {"files": [str(p) for p in paths], "song": song.name, "lyrics": lyrics.name}
+        return {
+            "files": [str(p) for p in result.fcpxml_paths],
+            "script": SCRIPT_NAME,
+            "template": TEMPLATE_NAME,
+            "render_dir": str(result.render_dir),
+        }
 
     return _start("build", f"Build {name}", fn)
 

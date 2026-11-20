@@ -14,13 +14,13 @@ Tiempo estimado: **15 a 30 minutos** (casi todo es esperar descargas). Solo se h
 
 ## Cómo encaja DaVinci Resolve
 
-Video Generator **no exporta un vídeo terminado**: genera un borrador de línea de tiempo (`.fcpxml`) que se abre en **DaVinci Resolve**, donde añades la canción y los subtítulos, retocas y exportas. Por eso **necesitas Resolve instalado** para obtener el vídeo final (no hace falta tenerlo abierto mientras usas Video Generator). Otros editores no están probados.
+Video Generator elige los clips y deja un **script en DaVinci Resolve**: con un clic, Resolve monta cada vídeo en vertical con la canción y la letra, y lo exporta. Por eso **necesitas Resolve instalado** para obtener el vídeo final (no hace falta tenerlo abierto mientras usas Video Generator). Otros editores no están probados.
 
 ## Paso 0: Instalar DaVinci Resolve
 
 1. Descarga **DaVinci Resolve** (la versión **gratuita** es suficiente) desde <https://www.blackmagicdesign.com/products/davinciresolve>. Pide un formulario con tus datos antes de la descarga.
-2. Instálalo (versión 18 o superior) y ábrelo una vez para completar su configuración inicial.
-3. La versión gratuita sirve para todo este tutorial. Sus limitaciones (algunos efectos y opciones de exportación avanzadas) no afectan a importar la línea de tiempo.
+2. Instálalo y ábrelo una vez para completar su configuración inicial.
+3. La versión gratuita sirve para todo (probado con la 21.2). La plantilla que necesita el script se prepara en el [tutorial 5](05-crear-video.md).
 
 ---
 

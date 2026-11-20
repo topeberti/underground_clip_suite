@@ -34,7 +34,7 @@ MIN_SPEED = 0.5  # clips can be slowed to at most 50% — below this, skip the c
 
 
 def _can_fill_without_repetition(
-    clips: list[dict], cut_points: list[float], song_duration_sec: float
+    clips: list[dict], cut_points: list[float], song_duration_sec: float, min_speed: float = MIN_SPEED
 ) -> bool:
     """Return True if every segment can be assigned a unique clip from *clips*.
 
@@ -51,7 +51,7 @@ def _can_fill_without_repetition(
             continue
         available = [
             c for c in clips
-            if c["path"] not in used and c["duration_sec"] >= needed * MIN_SPEED
+            if c["path"] not in used and c["duration_sec"] >= needed * min_speed
         ]
         if not available:
             return False
@@ -65,6 +65,7 @@ def select_clips(
     lyric_blocks: list[dict],
     song_duration_sec: float,
     same_anime: bool = False,
+    min_speed: float = MIN_SPEED,
 ) -> list[dict]:
     """Select one clip per timeline segment and return a ready-to-render clip list.
 
@@ -81,6 +82,9 @@ def select_clips(
         Total song length; used to compute the duration of the last segment.
     same_anime:
         If True, restrict all clips to a single anime and enforce no-repetition.
+    min_speed:
+        Slowest allowed playback speed for clips shorter than their segment.
+        1.0 disables slow-motion (Resolve's scripting API can't set clip speed).
 
     Returns
     -------
@@ -153,7 +157,7 @@ def select_clips(
                 if _anime_name(c["path"]) == candidate
             ]
             candidate_clips = [c for c, _ in filtered]
-            if _can_fill_without_repetition(candidate_clips, cut_points, song_duration_sec):
+            if _can_fill_without_repetition(candidate_clips, cut_points, song_duration_sec, min_speed):
                 chosen_anime = candidate
                 all_clips = candidate_clips
                 all_weights = [w for _, w in filtered]
@@ -180,7 +184,7 @@ def select_clips(
         if needed_duration <= 0:
             continue
 
-        min_clip_dur = needed_duration * MIN_SPEED
+        min_clip_dur = needed_duration * min_speed
         usable = [
             (c, w) for c, w in zip(all_clips, all_weights)
             if c["duration_sec"] >= min_clip_dur
@@ -189,7 +193,7 @@ def select_clips(
         if not usable:
             raise RuntimeError(
                 f"No clip long enough for a {needed_duration:.1f}s segment "
-                f"(need at least {min_clip_dur:.1f}s at {MIN_SPEED:.0%} speed). "
+                f"(need at least {min_clip_dur:.1f}s at {min_speed:.0%} speed). "
                 "Add more/longer clips to the database."
             )
 

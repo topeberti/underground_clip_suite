@@ -1,9 +1,9 @@
 # DaVinci Resolve Scripting API — Notes
 
 > **Status: Legacy reference.**
-> The CLI (`src/main.py build`) now generates `.fcpxml` files imported manually into
-> Resolve. Direct scripting via the Resolve API (`resolve_builder.py`) is no longer
-> used by the CLI but the module is kept for reference.
+> Build now automates Resolve with a generated in-app **Lua** script — see
+> [resolve_automation.md](resolve_automation.md). The Python connection below only works on
+> Resolve **Studio** (external scripting); `resolve_builder.py` is kept for reference.
 
 ---
 

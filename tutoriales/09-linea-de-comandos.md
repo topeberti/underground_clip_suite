@@ -18,7 +18,7 @@ Para evitar escribir `venv\Scripts\python` cada vez: `venv\Scripts\activate` y d
 | `remove-anime --name TEXTO [--dry-run] [--delete-files]` | Quita todos los clips cuya ruta contenga TEXTO |
 | `stats` | Estadísticas de la biblioteca |
 | `lyric-sync AUDIO [-o SALIDA.srt] [--countdown N]` | Sincroniza letras en la terminal (solo Windows) |
-| `build ...` | Genera líneas de tiempo `.fcpxml` |
+| `build ...` | Genera los montajes (`.fcpxml`) y el script `videogen_build` de Resolve |
 | `setup-upload [--platform tiktok\|instagram\|all]` | Autentica para subir |
 | `upload-batch --folder RUTA --caption "..."` | Sube en lote |
 | `upload-status [--last N]` | Historial de subidas |

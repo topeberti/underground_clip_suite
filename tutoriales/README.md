@@ -5,7 +5,7 @@ Guías paso a paso, pensadas para quien **nunca ha usado una terminal**. Sigue e
 ## Ruta rápida
 
 ```
-Instalar  →  Organizar clips  →  Etiquetar  →  Sincronizar letra  →  Crear vídeo  →  Abrir en DaVinci Resolve
+Instalar  →  Organizar clips  →  Etiquetar  →  Sincronizar letra  →  Crear vídeo  →  1 clic en DaVinci Resolve
   (1 vez)        (1 vez)          (1 vez por     (1 por canción)     (cuantas veces
                                    pack nuevo)                          quieras)
 ```
@@ -31,5 +31,6 @@ Instalar  →  Organizar clips  →  Etiquetar  →  Sincronizar letra  →  Cre
 - **Base de datos (DB)**: el archivo `clips_db\clips.db` donde se guarda la lista de clips analizados.
 - **Vibe**: el ambiente de un clip: `energic` (movimiento e intensidad), `sad` (calmado, melancólico) o `neutral`.
 - **SRT**: archivo de texto con la letra y los tiempos de cada frase.
-- **FCPXML**: el archivo que genera el programa; DaVinci Resolve lo importa como una línea de tiempo ya montada.
+- **Script de Resolve (`videogen_build`)**: lo deja el programa en el menú Workspace → Scripts de Resolve; al ejecutarlo monta y exporta los vídeos.
+- **FCPXML**: archivo de línea de tiempo que también se guarda, por si prefieres importar a mano.
 - **Línea de tiempo (timeline)**: la secuencia de clips ordenados que verás en DaVinci Resolve.

@@ -10,9 +10,10 @@ Given:
 - An optional vibe flag ("energic" or "sad")
 
 It produces:
-- A `.fcpxml` file that is imported into DaVinci Resolve.
-- The human then adds the song on the audio track, imports the SRT as subtitles,
-  and does final creative editing. The scaffold is a starting point, not a finished product.
+- A `.fcpxml` file per timeline (kept for manual import).
+- `videogen_build.lua` in Resolve's Scripts menu: one click in Resolve builds every timeline
+  (vertical 1080×1920, song, styled subtitles) and renders the `.mp4` files.
+  See `docs/resolve_automation.md`.
 
 The project is **fully implemented**. Agent tasks are typically bug fixes, new features,
 or extending the vibe/tagging system.
@@ -27,7 +28,8 @@ video_generator/
 ├── ARCHITECTURE.md              ← full technical design (authoritative)
 ├── SETUP.md                     ← environment + dependency setup
 ├── docs/
-│   ├── resolve_api.md           ← legacy Resolve scripting notes
+│   ├── resolve_automation.md    ← one-click Lua script: how it works, Resolve API quirks
+│   ├── resolve_api.md           ← legacy Resolve scripting notes (Studio-only Python)
 │   ├── clip_database.md         ← clip tagging + DB schema
 │   ├── srt_format.md            ← .srt parsing notes
 │   └── vibe_system.md           ← how vibe maps to clip selection
@@ -41,7 +43,9 @@ video_generator/
 │   ├── timeline/
 │   │   ├── beat_detector.py     ← librosa BPM + duration analysis
 │   │   ├── clip_selector.py     ← lyric-boundary cut points + weighted clip selection
-│   │   ├── fcpxml_builder.py    ← render clip list → .fcpxml file (primary output)
+│   │   ├── fcpxml_builder.py    ← render clip list → .fcpxml file
+│   │   ├── resolve_script.py    ← framing, subtitle wrapping, generated Resolve Lua script
+│   │   ├── build_runner.py      ← shared Build pipeline (CLI + web UI)
 │   │   └── resolve_builder.py   ← legacy: direct Resolve API (not used by CLI)
 │   ├── lyrics/
 │   │   └── srt_parser.py        ← .srt file parser (pysrt + regex fallback)
@@ -65,6 +69,7 @@ video_generator/
 
 ```
 srt_parser → beat_detector → clip_selector → fcpxml_builder → .fcpxml
+                                           └→ resolve_script → videogen_build.lua → (Resolve) → .mp4
 ```
 
 See ARCHITECTURE.md for the full annotated data flow.
@@ -94,9 +99,12 @@ python src/main.py upload-status [--last N]
 
 - **Cut points come from lyric boundaries**, not beat-snapping. One clip per lyric segment.
   `beat_detector` is still called to obtain `duration_sec`; `beat_times` is not used downstream.
-- **FCPXML, not Resolve API**. The `resolve_builder.py` module exists but is not wired
-  into `main.py`. The FCPXML approach works without Resolve being open.
-- **MIN_SPEED = 0.5** — clips are never slowed below 50% to fill a long segment.
+- **Resolve is driven by a generated Lua script**, not the Python API: the user runs free
+  Resolve 21.2, where external/Python scripting is Studio-only. The script has no file
+  access (`io` is nil) and reports via `error()` into Resolve's log. Read
+  `docs/resolve_automation.md` before touching `resolve_script.py`.
+- **No slow-motion in Build** (`min_speed=1.0`): Resolve's API can't set clip speed.
+  `MIN_SPEED = 0.5` is still the selector default for other callers.
 - **MIN_CUT_GAP = 0.1 s** — cut points within 100 ms of the previous are discarded,
   preventing a 1-frame first clip when an SRT starts at 1 ms instead of 0 ms.
 - **same_anime mode** uses a greedy feasibility check before committing to an anime;

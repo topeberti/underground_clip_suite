@@ -37,12 +37,22 @@ STEP 4 — BUILD FCPXML
   → slow-motion clips get a <timeMap> child element with two timept nodes
   → saved to output/<project_name>.fcpxml
 
+STEP 5 — RESOLVE SCRIPT
+  resolve_script.py
+  → measure each used clip's baked-in letterbox → per-clip zoom (1.0 when none)
+  → write <name>_subtitles.srt with lines > 20 chars wrapped in two
+  → write videogen_build.lua into Resolve's Scripts/Utility folder, all data baked in
+  (Build uses min_speed=1.0 in STEP 3: the script can't set clip speed)
+
 OUTPUT
-  output/<project_name>.fcpxml
-  Human imports into DaVinci Resolve:
-    1. File → Import Timeline → Import AAF, EDL, XML… → select .fcpxml
-    2. Drag song onto audio track
-    3. File → Import → Subtitles → select .srt
+  <output_dir>/<timeline>.fcpxml          (manual import, optional)
+  <output_dir>/<name>_subtitles.srt
+  %APPDATA%/…/Fusion/Scripts/Utility/videogen_build.lua
+  Human, in Resolve: Workspace → Scripts → videogen_build
+    → duplicates the videogen_template timeline per edit (keeps subtitle style)
+    → subtitles, clips (video only, zoomed), song → render jobs
+    → <song folder>/videos/<timeline>.mp4  (1080×1920, lyrics burned in)
+  Details and Resolve API quirks: docs/resolve_automation.md
 ```
 
 ---

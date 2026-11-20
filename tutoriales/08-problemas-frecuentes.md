@@ -75,14 +75,26 @@ Tienes pocos clips de ese vibe. Añade más variedad o usa vibe `Any`.
 ### "Media Offline"
 Resolve no encuentra los clips. Causas: moviste/renombraste los archivos, cambió la letra del disco o el disco externo no está conectado. Reconecta el disco o vuelve a poner los clips en su sitio, y en Resolve: clic derecho en los clips → **Relink Selected Clips…** y apunta a la carpeta correcta. Si cambiaste de sitio la colección, re-etiqueta ([tutorial 6](06-gestionar-biblioteca.md)) y genera una línea de tiempo nueva.
 
+### `videogen_build` no aparece en Workspace → Scripts
+Cierra y vuelve a abrir Resolve (lee la carpeta de scripts al arrancar) y abre un proyecto: con el Project Manager en pantalla el menú está vacío. Comprueba que has hecho **Build** al menos una vez.
+
+### Los subtítulos salen con el estilo por defecto
+No encuentra la plantilla. La línea de tiempo debe llamarse exactamente `videogen_template` y estar en el **proyecto abierto** ([tutorial 5, Parte 1](05-crear-video.md)).
+
+### No pasa nada al ejecutar el script / quiero saber qué hizo
+El script no puede escribir en la consola de Resolve. Su resultado queda en el registro de Resolve: abre `%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\logs\ResolveDebug.txt` y busca `VIDEOGEN RESULT`. Ahí verás cuántos clips y subtítulos puso en cada vídeo, o el error.
+
+### "No clip long enough for a … segment" al hacer Build
+Como Resolve no permite ralentizar clips desde un script, cada frase necesita un clip al menos igual de largo. Suele pasar con el tramo final, cuando la última frase acaba mucho antes que la canción: recorta la canción o añade una frase al final del `.srt`. También ayuda tener más clips largos.
+
+### Mis otras líneas de tiempo del proyecto salen recortadas
+El script pone la escala de imagen del proyecto en *Scale full frame with crop*. Usa un proyecto aparte para los vídeos de TikTok, o cámbialo de nuevo en **File → Project Settings → Image Scaling**.
+
+### Se han sobrescrito vídeos
+Ejecutar dos veces el mismo script exporta con los mismos nombres. Haz un Build nuevo antes de volver a ejecutarlo: el Build elige nombres que no existan en la carpeta `videos`.
+
 ### El vídeo va más rápido/lento que la canción
-El FPS de la línea de tiempo no coincide con el elegido al generar. Genera de nuevo con el mismo FPS del proyecto de Resolve.
-
-### No encuentro la opción de importar
-**File → Import → Timeline…** (algunas versiones: *Import Timeline → Import AAF, EDL, XML…*). Elige el `.fcpxml`.
-
-### La canción o los subtítulos no vienen en la línea de tiempo
-Es lo esperado: se añaden a mano (pasos 6 y 7 del [tutorial 5](05-crear-video.md)).
+El FPS de la plantilla no coincide con el elegido al generar. Usa 30 en ambos.
 
 ---
 

@@ -423,8 +423,9 @@ $("btn-build").onclick = (e) => guarded(e.target, async () => {
     const name = f.replace(/^.*[\\/]/, "");
     return el("li", {}, el("code", { textContent: f }), " ", el("a", { href: `/api/download?path=${encodeURIComponent(f)}`, textContent: "download", download: name }));
   }));
-  $("build-song").textContent = job.result.song;
-  $("build-srt").textContent = job.result.lyrics;
+  $("build-script").textContent = job.result.script;
+  $("build-template").textContent = job.result.template;
+  $("build-render").textContent = job.result.render_dir;
   $("build-result").hidden = false;
 });
 

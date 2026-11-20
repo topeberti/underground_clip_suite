@@ -191,7 +191,7 @@ def build(
 
     from src.timeline.build_runner import run_build
     try:
-        saved_paths = run_build(
+        result = run_build(
             song, lyrics, vibe, fps, name, count, resolved_output_dir, same_anime, DB_PATH, console
         )
     except RuntimeError as exc:
@@ -203,11 +203,11 @@ def build(
         console.print(traceback.format_exc())
         raise typer.Exit(1)
 
-    console.print(f"\n[green bold]Done![/green bold] {len(saved_paths)} timeline(s) saved to [cyan]{resolved_output_dir}[/cyan]")
-    console.print("\n[bold]Next steps in DaVinci Resolve:[/bold]")
-    console.print("  1. File → Import Timeline → Import AAF, EDL, XML…  → select the .fcpxml file(s)")
-    console.print(f"  2. Drag [cyan]{song.name}[/cyan] onto the audio track")
-    console.print(f"  3. File → Import → Subtitles → select [cyan]{lyrics.name}[/cyan]")
+    from src.timeline.resolve_script import SCRIPT_NAME, TEMPLATE_NAME
+    console.print(f"\n[green bold]Done![/green bold] {len(result.fcpxml_paths)} timeline(s) saved to [cyan]{resolved_output_dir}[/cyan]")
+    console.print("\n[bold]Next step in DaVinci Resolve[/bold] (with a project open):")
+    console.print(f"  Workspace → Scripts → [cyan]{SCRIPT_NAME}[/cyan]")
+    console.print(f"  It builds the edit(s) from the [cyan]{TEMPLATE_NAME}[/cyan] timeline and renders to [cyan]{result.render_dir}[/cyan]")
 
 
 DEFAULT_UPLOAD_CONFIG = Path(__file__).parent.parent / "config" / "upload_config.json"
