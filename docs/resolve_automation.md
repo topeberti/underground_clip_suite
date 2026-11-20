@@ -114,6 +114,16 @@ size (cached in `pinterest\media_clips\`, using ffmpeg from PATH or Subtitle Edi
 and the script cuts those clips like any video. H.264 needs even sizes, so an odd width or
 height gets 1 black pixel of padding. The picture itself is never scaled.
 
+**Very large clips fail to render:** Resolve free couldn't decode clips made from the
+biggest Pinterest images (1632×2902, 1632×2912, 1650×2946). The render job stopped with
+"Error decoding full resolution media for …_30fps_1s.mp4", and `ResolveDebug.txt` showed
+`Failed to decode clip <…>, track 0, frame N: Video size is too small`. ffmpeg decoded the
+same files without errors. `centerCrop` only ever shows the centre 1080×1920 of an image,
+so each image is now center-cropped to at most 1080×1920 before encoding. Rendered videos
+look the same, and Resolve decodes the smaller clips. Cached clips are named
+`<image>_<fps>fps_<n>s_1080x1920.mp4`. Older clips without the size suffix aren't used any
+more and can be deleted.
+
 ### Render burn-in works
 `SetRenderSettings({ExportSubtitle = true, SubtitleFormat = "BurnIn"})` with H.264 MP4
 produced burned-in subtitles in the timeline's subtitle style. No preset is needed. A saved

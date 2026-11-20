@@ -127,7 +127,9 @@ def run_build(
         # Resolve can't trim stills, so the script places a short clip of each image.
         console.print(f"[dim]Preparing {len(paths)} image clip(s)…[/dim]")
         longest = max(c["duration_sec"] for b in builds for c in b["clips"])
-        clip_of = image_selector.still_clips(paths, pinterest_dir, fps, min_sec=longest)
+        clip_of = image_selector.still_clips(
+            paths, pinterest_dir, fps, (resolve_script.OUT_W, resolve_script.OUT_H), min_sec=longest,
+        )
         for b in builds:
             b["clips"] = [{**c, "path": clip_of[c["path"]]} for c in b["clips"]]
         zooms = dict.fromkeys(clip_of.values(), 1.0)   # never resized

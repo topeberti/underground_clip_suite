@@ -12,7 +12,8 @@ frame targets land exactly on each image boundary.
 
 Resolve ignores startFrame/endFrame for stills and places each one at its default still
 duration (5 s), so still_clips() turns every used image into a short H.264 clip at the
-timeline fps and the image's native size, and the script cuts those like any video.
+timeline fps and the image's native size (cropped to the visible frame), and the script
+cuts those like any video.
 """
 
 import math
@@ -165,17 +166,22 @@ def _ffmpeg() -> str:
     return exe
 
 
-def still_clips(images: set[str], media_dir: Path, fps: float, min_sec: float = 0.0) -> dict[str, str]:
+def still_clips(
+    images: set[str], media_dir: Path, fps: float, frame: tuple[int, int], min_sec: float = 0.0,
+) -> dict[str, str]:
     """Image path → path of an H.264 clip of it at `fps`, longer than min_sec, cached in
-    <media_dir>_clips/<category>/. The picture is never scaled: odd widths/heights get
+    <media_dir>_clips/<category>/. The picture is never scaled, only center-cropped to
+    `frame` (w, h), the part a center-crop timeline of that size shows anyway: Resolve
+    fails to decode very large clips ("Video size is too small"). Odd widths/heights get
     one black pixel of padding (H.264 needs even sizes), invisible on the black canvas."""
     cache_root = media_dir.parent / f"{media_dir.name}_clips"
     clip_sec = max(math.ceil(STILL_CLIP_MIN_SEC), math.floor(min_sec) + 1)
+    fw, fh = frame
     exe = None
     result = {}
     for image in sorted(images):
         src = Path(image)
-        out = cache_root / src.parent.name / f"{src.stem}_{fps:g}fps_{clip_sec}s.mp4"
+        out = cache_root / src.parent.name / f"{src.stem}_{fps:g}fps_{clip_sec}s_{fw}x{fh}.mp4"
         if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
             exe = exe or _ffmpeg()
             out.parent.mkdir(parents=True, exist_ok=True)
@@ -183,7 +189,8 @@ def still_clips(images: set[str], media_dir: Path, fps: float, min_sec: float = 
                 [
                     exe, "-y", "-v", "error", "-loop", "1", "-framerate", f"{fps:g}", "-i", str(src),
                     "-t", str(clip_sec), "-r", f"{fps:g}",
-                    "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2:0:0:black,"
+                    "-vf", f"crop=min(iw\\,{fw}):min(ih\\,{fh}),"
+                           "pad=ceil(iw/2)*2:ceil(ih/2)*2:0:0:black,"
                            "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p",
                     "-c:v", "libx264", "-preset", "fast", "-crf", "12", "-tune", "stillimage",
                     "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",

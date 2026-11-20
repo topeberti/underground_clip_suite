@@ -38,8 +38,8 @@ STEP 3 (alt) — PINTEREST EDIT (build --edit-type pinterest)
     segment split evenly into stills of ≤ 0.5 s. Whole frames; a beat < 3 frames from a
     lyric cut is skipped. Random image per slot, never the same twice in a row
   → same list format (clip_start_sec 0, speed 1); no FCPXML, no zoom measuring
-  → still_clips(): each used image → H.264 clip (ffmpeg, timeline fps, native size, odd
-    sides padded 1 px) cached in <pinterest_dir>_clips/, because Resolve ignores
+  → still_clips(): each used image → H.264 clip (ffmpeg, timeline fps, native size
+    center-cropped to 1080x1920 — Resolve can't decode very large clips — odd sides padded 1 px) cached in <pinterest_dir>_clips/, because Resolve ignores
     startFrame/endFrame for stills; the Resolve script uses "centerCrop" (no resizing)
 
 STEP 4 — BUILD FCPXML
